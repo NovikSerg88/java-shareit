@@ -2,11 +2,10 @@ package ru.practicum.shareit.item;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.UserIdException;
+import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.util.List;
@@ -22,17 +21,15 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
 
     @Override
-    public ItemDto save(Long userId, ItemDto itemDto) {
+    public ItemDto save(ItemDto itemDto, Long userId) {
         isItemRequestValid(userId, itemDto);
-        return itemMapper.toItemDto(itemRepository.save(userId, itemMapper.toItem(itemDto, userId)));
+        return itemMapper.toItemDto(itemRepository.save(itemMapper.toItem(itemDto, userId), userId));
     }
 
     @Override
     public ItemDto update(Map<String, Object> updates, Long id, Long userId) {
-        if (userId == null) {
-            throw new UserIdException(String.format("user %d id not found.", userId));
-        }
         Item item = itemRepository.update(updates, id, userId);
+        isItemRequestValid(userId, itemMapper.toItemDto(item));
         return itemMapper.toItemDto(item);
     }
 
@@ -51,9 +48,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> search(String text) {
-        text = text.toLowerCase();
         return itemRepository
-                .search(text)
+                .search(text.toLowerCase())
                 .stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
@@ -61,10 +57,12 @@ public class ItemServiceImpl implements ItemService {
 
     private void isItemRequestValid(Long userId, ItemDto itemDto) {
         if (userRepository.getUserById(userId) == null) {
-            throw new UserIdException(String.format("user %d id not found.", userId));
+            throw new UserNotFoundException(String.format("User ID = %d not found.", userId));
         }
         if (itemDto.getAvailable() == null) {
-            throw new ValidationException(String.format("item request invalid parameter %s", itemDto.getAvailable()));
+            throw new ValidationException(String.format("Item ID = %d invalid parameter %b"
+                    , itemDto.getId()
+                    , itemDto.getAvailable()));
         }
     }
 }

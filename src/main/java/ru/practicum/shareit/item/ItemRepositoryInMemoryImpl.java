@@ -2,12 +2,9 @@ package ru.practicum.shareit.item;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.ItemIdException;
-import ru.practicum.shareit.exception.UserAlreadyExistsException;
 import ru.practicum.shareit.exception.UserIdException;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.item.model.SearchBy;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,7 +16,7 @@ public class ItemRepositoryInMemoryImpl implements ItemRepository {
     private Long initialId = 0L;
 
     @Override
-    public Item save(Long userId, Item item) {
+    public Item save(Item item, Long userId) {
         item.setId(++initialId);
         item.setOwnerId(userId);
         items.put(item.getId(), item);
@@ -30,18 +27,18 @@ public class ItemRepositoryInMemoryImpl implements ItemRepository {
     public Item update(Map<String, Object> updates, Long id, Long userId) {
         Item item = items.get(id);
         if (!item.getOwnerId().equals(userId)) {
-            throw new UserIdException("access denied by another user.");
+            throw new UserIdException("Access denied by another user");
         }
-        if (updates.containsKey("name")) {
-            String newName = (String) updates.get("name");
+        if (updates.containsKey(SearchBy.name.getColumnName())) {
+            String newName = (String) updates.get(SearchBy.name.getColumnName());
             item.setName(newName);
         }
-        if (updates.containsKey("description")) {
-            String description = (String) updates.get("description");
+        if (updates.containsKey(SearchBy.description.getColumnName())) {
+            String description = (String) updates.get(SearchBy.description.getColumnName());
             item.setDescription(description);
         }
-        if (updates.containsKey("available")) {
-            Boolean available = (Boolean) updates.get("available");
+        if (updates.containsKey(SearchBy.available.getColumnName())) {
+            Boolean available = (Boolean) updates.get(SearchBy.available.getColumnName());
             item.setAvailable(available);
         }
         return item;
@@ -50,7 +47,7 @@ public class ItemRepositoryInMemoryImpl implements ItemRepository {
     @Override
     public Item getById(Long id) {
         if (!items.containsKey(id)) {
-            throw new ItemIdException(String.format("item id %d not found", id));
+            throw new ItemIdException(String.format("Item ID = %d not found", id));
         }
         return items.get(id);
     }

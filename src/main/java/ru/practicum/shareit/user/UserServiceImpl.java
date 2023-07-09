@@ -1,9 +1,9 @@
 package ru.practicum.shareit.user;
 
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.UserAlreadyExistsException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
@@ -31,6 +31,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto save(UserDto userDto) {
+        isUserValid(userMapper.toUser(userDto));
         return userMapper.toUserDto(userRepository.save(userMapper.toUser(userDto)));
     }
 
@@ -43,5 +44,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto delete(Long id) {
         return userMapper.toUserDto(userRepository.delete(id));
+    }
+
+    private void isUserValid(User user) {
+        if (userRepository.getUsers().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
+            throw new UserAlreadyExistsException(String.format("User with email %s already exists", user.getEmail()));
+        }
+        if (user.getEmail() == null || !user.getEmail().contains("@")) {
+            throw new ValidationException(String.format("Email %s is not valid", user.getEmail()));
+        }
     }
 }

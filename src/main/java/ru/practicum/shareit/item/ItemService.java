@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface ItemService {
 
-    ItemDto save(Long userId, ItemDto itemDto);
+    ItemDto save(ItemDto itemDto, Long userId);
 
     ItemDto update(Map<String, Object> updates, Long id, Long userId);
 
