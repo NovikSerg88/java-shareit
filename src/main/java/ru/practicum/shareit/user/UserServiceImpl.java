@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.UserAlreadyExistsException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 

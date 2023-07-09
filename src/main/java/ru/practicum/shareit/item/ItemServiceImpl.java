@@ -60,9 +60,7 @@ public class ItemServiceImpl implements ItemService {
             throw new UserNotFoundException(String.format("User ID = %d not found.", userId));
         }
         if (itemDto.getAvailable() == null) {
-            throw new ValidationException(String.format("Item ID = %d invalid parameter %b"
-                    , itemDto.getId()
-                    , itemDto.getAvailable()));
+            throw new ValidationException(String.format("Item ID = %d invalid parameter %b", itemDto.getId(), itemDto.getAvailable()));
         }
     }
 }
