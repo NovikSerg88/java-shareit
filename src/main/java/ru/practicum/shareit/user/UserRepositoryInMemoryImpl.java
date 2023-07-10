@@ -9,7 +9,7 @@ import java.util.*;
 @Component
 public class UserRepositoryInMemoryImpl implements UserRepository {
 
-    private Map<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
     private Long initialId = 0L;
 
     @Override
@@ -36,12 +36,12 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
     public User update(Map<String, Object> updates, Long id) {
         User user = users.get(id);
         if (user != null) {
-            if (updates.containsKey(SearchBy.name.getColumnName())) {
-                String newName = (String) updates.get(SearchBy.name.getColumnName());
+            if (updates.containsKey(SearchBy.NAME.getColumnName())) {
+                String newName = (String) updates.get(SearchBy.NAME.getColumnName());
                 user.setName(newName);
             }
-            if (updates.containsKey(SearchBy.email.getColumnName())) {
-                String newEmail = (String) updates.get(SearchBy.email.getColumnName());
+            if (updates.containsKey(SearchBy.EMAIL.getColumnName())) {
+                String newEmail = (String) updates.get(SearchBy.EMAIL.getColumnName());
                 if (users.values().stream().anyMatch(u -> u.getEmail().equals(newEmail) && !Objects.equals(u.getId(), user.getId()))) {
                     throw new UserAlreadyExistsException("User already exists");
                 }

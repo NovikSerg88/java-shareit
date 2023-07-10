@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Component
 public class ItemRepositoryInMemoryImpl implements ItemRepository {
 
-    private Map<Long, Item> items = new HashMap<>();
+    private final Map<Long, Item> items = new HashMap<>();
     private Long initialId = 0L;
 
     @Override
@@ -29,16 +29,16 @@ public class ItemRepositoryInMemoryImpl implements ItemRepository {
         if (!item.getOwnerId().equals(userId)) {
             throw new UserIdException("Access denied by another user");
         }
-        if (updates.containsKey(SearchBy.name.getColumnName())) {
-            String newName = (String) updates.get(SearchBy.name.getColumnName());
+        if (updates.containsKey(SearchBy.NAME.getColumnName())) {
+            String newName = (String) updates.get(SearchBy.NAME.getColumnName());
             item.setName(newName);
         }
-        if (updates.containsKey(SearchBy.description.getColumnName())) {
-            String description = (String) updates.get(SearchBy.description.getColumnName());
+        if (updates.containsKey(SearchBy.DESCRIPTION.getColumnName())) {
+            String description = (String) updates.get(SearchBy.DESCRIPTION.getColumnName());
             item.setDescription(description);
         }
-        if (updates.containsKey(SearchBy.available.getColumnName())) {
-            Boolean available = (Boolean) updates.get(SearchBy.available.getColumnName());
+        if (updates.containsKey(SearchBy.AVAILABLE.getColumnName())) {
+            Boolean available = (Boolean) updates.get(SearchBy.AVAILABLE.getColumnName());
             item.setAvailable(available);
         }
         return item;

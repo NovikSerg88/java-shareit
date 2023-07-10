@@ -1,17 +1,14 @@
 package ru.practicum.shareit.item.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
 public enum SearchBy {
-    name("name"),
-    description("description"),
-    available("available");
+    NAME("name"),
+    DESCRIPTION("description"),
+    AVAILABLE("available");
 
     private final String columnName;
-
-    SearchBy(String columnName) {
-        this.columnName = columnName;
-    }
-
-    public String getColumnName() {
-        return columnName;
-    }
 }
