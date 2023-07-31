@@ -15,5 +15,7 @@ public interface UserService {
 
     UserDto update(Map<String, Object> updates, Long id);
 
-    UserDto delete(Long id);
+    void delete(Long id);
+
+    User findUserById(Long id);
 }

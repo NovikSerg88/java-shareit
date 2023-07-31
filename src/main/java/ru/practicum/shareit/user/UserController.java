@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> save(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> save(@Valid @RequestBody UserDto userDto) {
         log.info("POST request /users with ID = {}", userDto.getId());
         return new ResponseEntity<>(userService.save(userDto), HttpStatus.OK);
     }
@@ -43,8 +44,8 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public UserDto delete(@PathVariable("userId") Long id) {
+    public void delete(@PathVariable("userId") Long id) {
         log.info("DELETE request /users/userID with ID = {}", id);
-        return userService.delete(id);
+        userService.delete(id);
     }
 }
