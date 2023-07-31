@@ -1,8 +1,6 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.mapper.Mapper;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.Booking;
 
@@ -15,24 +13,18 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
-
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 import static ru.practicum.shareit.booking.model.Status.APPROVED;
 
-
 @Component
 @RequiredArgsConstructor
 public class CommentMapper {
 
-    private static final long CREATION_DELTA_MILLIS = 1000L;
-
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-
 
     public CommentResponse mapToDto(Comment domain) {
         return CommentResponse.builder()
@@ -43,8 +35,7 @@ public class CommentMapper {
                 .build();
     }
 
-
-    public Comment mapToDomain(CommentRequest dto) {
+    public Comment mapToComment(CommentRequest dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new NotFoundException("User with ID=%d not found."));
         Item item = itemRepository.findItemByIdWithBookingsFetched(dto.getItemId())
@@ -53,14 +44,9 @@ public class CommentMapper {
         return Comment.builder()
                 .text(dto.getText())
                 .item(item)
-                .created(getCreationDate())
+                .created(LocalDateTime.now())
                 .author(user)
                 .build();
-    }
-
-    private LocalDateTime getCreationDate() {
-        return LocalDateTime.now()
-                .plus(CREATION_DELTA_MILLIS, ChronoUnit.MILLIS);
     }
 
     private void checkUserBookedItem(CommentRequest dto, Item item) {

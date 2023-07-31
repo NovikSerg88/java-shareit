@@ -9,13 +9,11 @@ public interface UserService {
 
     List<UserDto> getUsers();
 
-    UserDto getUserById(Long id);
+    UserDto getUserById(Long userId);
 
     UserDto save(UserDto userDto);
 
-    UserDto update(Map<String, Object> updates, Long id);
+    UserDto update(Map<String, Object> updates, Long userId);
 
-    void delete(Long id);
-
-    User findUserById(Long id);
+    void delete(Long userId);
 }

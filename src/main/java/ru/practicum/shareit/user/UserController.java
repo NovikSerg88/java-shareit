@@ -2,8 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 
@@ -21,31 +19,31 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> getUsers() {
-        log.info("GET request /users");
+        log.info("Received GET request to get all users");
         return userService.getUsers();
     }
 
     @GetMapping("/{userId}")
-    public UserDto getUserById(@PathVariable("userId") Long id) {
-        log.info("GET request /users/userId = {}", id);
-        return userService.getUserById(id);
+    public UserDto getUserById(@PathVariable("userId") Long userId) {
+        log.info("Received GET request to get user with ID = {}", userId);
+        return userService.getUserById(userId);
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> save(@Valid @RequestBody UserDto userDto) {
-        log.info("POST request /users with ID = {}", userDto.getId());
-        return new ResponseEntity<>(userService.save(userDto), HttpStatus.OK);
+    public UserDto save(@Valid @RequestBody UserDto userDto) {
+        log.info("Received POST request to save user = {}", userDto);
+        return userService.save(userDto);
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity<UserDto> update(@RequestBody Map<String, Object> updates, @PathVariable("userId") Long id) {
-        log.info("PATCH request /users/userID with ID = {}", id);
-        return new ResponseEntity<>(userService.update(updates, id), HttpStatus.OK);
+    public UserDto update(@RequestBody Map<String, Object> updates, @PathVariable("userId") Long userId) {
+        log.info("Received PATCH request to update user with ID = {}", userId);
+        return userService.update(updates, userId);
     }
 
     @DeleteMapping("/{userId}")
-    public void delete(@PathVariable("userId") Long id) {
-        log.info("DELETE request /users/userID with ID = {}", id);
-        userService.delete(id);
+    public void delete(@PathVariable("userId") Long userId) {
+        log.info("Received DELETE request to delete user with ID = {}", userId);
+        userService.delete(userId);
     }
 }

@@ -10,9 +10,6 @@ import java.util.Optional;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    @Query("select i from Item i join fetch i.owner o where i.id = :itemId")
-    Optional<Item> findByIdOwnerFetched(@Param("itemId") Long itemId);
-
     @Query("select distinct i from Item i left join fetch i.bookings b where i.id = :itemId")
     Optional<Item> findItemByIdWithBookingsFetched(@Param("itemId") Long itemId);
 
@@ -28,5 +25,4 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     void deleteAllByOwner_Id(Long ownerId);
 
     void deleteItemByIdAndOwner_Id(Long itemId, Long ownerId);
-
 }

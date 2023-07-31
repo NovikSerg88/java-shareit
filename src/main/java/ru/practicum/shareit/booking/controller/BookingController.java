@@ -19,12 +19,11 @@ public class BookingController {
     private static final String USER_HEADER = "X-Sharer-User-Id";
     private final BookingService bookingService;
 
-
     @ResponseBody
     @PostMapping
     public BookingResponseDto create(@Valid @RequestBody BookingRequestDto bookingRequestDto,
                                      @RequestHeader(USER_HEADER) Long bookerId) {
-        log.info("POST request to create Booking={}", bookingRequestDto);
+        log.info("Received POST request to create Booking={}", bookingRequestDto);
         return bookingService.create(bookingRequestDto, bookerId);
     }
 
@@ -33,44 +32,28 @@ public class BookingController {
     public BookingResponseDto update(@PathVariable("bookingId") Long bookingId,
                                      @RequestHeader(USER_HEADER) Long userId,
                                      @RequestParam Boolean approved) {
-        log.info(
-                "PATCH request to update status of Booking with ID={} to status={}",
-                bookingId,
-                approved
-        );
+        log.info("Received PATCH request to update status of Booking with ID={} to status={}", bookingId, approved);
         return bookingService.update(bookingId, userId, approved);
     }
 
     @GetMapping("/{bookingId}")
     public BookingResponseDto getBookingById(@PathVariable Long bookingId,
                                              @RequestHeader(USER_HEADER) Long userId) {
-        log.info(
-                "GET request to booking with id={} by user/owner with id={}",
-                bookingId,
-                userId
-        );
+        log.info("Received GET request to to get booking with id={} by user/owner with id={}", bookingId, userId);
         return bookingService.getBookingById(bookingId, userId);
     }
 
     @GetMapping
     public List<BookingResponseDto> getBookingsOfUser(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                                       @RequestHeader(USER_HEADER) Long bookerId) {
-        log.info(
-                "Received request to GET all bookings of user with id={} in state={}",
-                bookerId,
-                state
-        );
+        log.info("Received GET request to get all bookings of user with id={} in state={}", bookerId, state);
         return bookingService.getBookingsOfUser(state, bookerId);
     }
 
     @GetMapping("/owner")
     public List<BookingResponseDto> getBookingsOfOwner(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
                                                        @RequestHeader(USER_HEADER) Long ownerId) {
-        log.info(
-                "GET request all bookings of owner with id={}, in state={}",
-                ownerId,
-                state
-        );
+        log.info("Received GET request to get all bookings of owner with id={}, in state={}", ownerId, state);
         return bookingService.getBookingsOfOwner(state, ownerId);
     }
 }

@@ -28,8 +28,8 @@ import static ru.practicum.shareit.booking.model.Status.*;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final BookingMapper bookingMapper;
     private final UserRepository userRepository;
+    private final BookingMapper bookingMapper;
 
     @Override
     public BookingResponseDto create(BookingRequestDto bookingRequestDto, Long bookerId) {

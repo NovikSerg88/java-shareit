@@ -28,9 +28,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUserById(Long id) {
-        return userMapper.toUserDto(userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("User with %d not found", id))));
+    public UserDto getUserById(Long userId) {
+        return userMapper.toUserDto(userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("User with ID = %d not found", userId))));
     }
 
     @Override
@@ -39,8 +39,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto update(Map<String, Object> updates, Long id) {
-        User user = userMapper.toUser(getUserById(id));
+    public UserDto update(Map<String, Object> updates, Long userId) {
+        User user = userMapper.toUser(getUserById(userId));
         if (updates.containsKey(SearchBy.NAME.getColumnName())) {
             String newName = (String) updates.get(SearchBy.NAME.getColumnName());
             user.setName(newName);
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
         if (updates.containsKey(SearchBy.EMAIL.getColumnName())) {
             String newEmail = (String) updates.get(SearchBy.EMAIL.getColumnName());
             if (getUsers().stream().anyMatch(u -> u.getEmail().equals(newEmail) && !Objects.equals(u.getId(), user.getId()))) {
-                throw new UserAlreadyExistsException("User already exists");
+                throw new UserAlreadyExistsException(String.format("User with ID = %d already exists", userId));
             }
             user.setEmail(newEmail);
         }
@@ -58,11 +58,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
         userRepository.deleteById(id);
-    }
-
-    @Override
-    public User findUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID=" + id + " не найден!"));
     }
 }

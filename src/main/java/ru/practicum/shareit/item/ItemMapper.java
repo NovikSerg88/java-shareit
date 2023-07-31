@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import ru.practicum.shareit.exception.NotFoundException;
@@ -31,10 +30,10 @@ public class ItemMapper {
     }
 
 
-    public Item mapToDomain(ItemDto itemDto) {
+    public Item mapToItem(ItemDto itemDto) {
         User owner = userRepository.findById(itemDto.getOwnerId())
                 .orElseThrow(() ->
-                     new NotFoundException("User with ID=%d not found."));
+                        new NotFoundException("User not found."));
 
         return Item.builder()
                 .id(itemDto.getId())
@@ -42,7 +41,7 @@ public class ItemMapper {
                 .description(itemDto.getDescription())
                 .owner(owner)
                 .available(itemDto.getAvailable())
-                .request(null) // TODO fix, after implementing ItemRequest logic
+                .request(null)
                 .build();
     }
 }

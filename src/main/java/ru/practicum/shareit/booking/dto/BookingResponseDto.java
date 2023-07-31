@@ -17,7 +17,6 @@ public class BookingResponseDto {
     private User booker;
     private Item item;
 
-
     @Getter
     @Setter
     @AllArgsConstructor

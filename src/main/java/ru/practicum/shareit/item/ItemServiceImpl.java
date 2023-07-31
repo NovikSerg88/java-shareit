@@ -1,22 +1,18 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import ru.practicum.shareit.booking.model.Booking;
 
-import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.BookingResponseDto;
 import ru.practicum.shareit.item.dto.CommentResponse;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
-
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -62,7 +58,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto saveItem(ItemDto dto) {
-        Item item = itemMapper.mapToDomain(dto);
+        Item item = itemMapper.mapToItem(dto);
         System.out.println(item);
         Item saved = itemRepository.save(item);
         System.out.println(saved);
@@ -129,23 +125,23 @@ public class ItemServiceImpl implements ItemService {
     private Item findItemBookingsFetchedOrThrow(Long itemId) {
         return itemRepository.findItemByIdWithBookingsFetched(itemId)
                 .orElseThrow(() ->
-                     new NotFoundException("Item with id=%d not found."));
+                        new NotFoundException("Item not found."));
     }
 
     private Item findItemByIdOrThrow(Long itemId) {
         return itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item with id=%d not found."));
+                .orElseThrow(() -> new NotFoundException("Item not found."));
     }
 
     private void checkItemBelongsToUser(Item item, Long ownerId) {
         if (!item.getOwner().getId().equals(ownerId)) {
-            throw new NotFoundException("Cannot update Item with id=%d because it doesn't belong to user with id=%d");
+            throw new NotFoundException("Cannot update Item because it doesn't belong to user");
         }
     }
 
     private void checkUserExists(Long ownerId) {
         if (userRepository.getReferenceById(ownerId).getId() == null) {
-            throw new NotFoundException("User with ID=%d not found.");
+            throw new NotFoundException("User not found.");
         }
     }
 

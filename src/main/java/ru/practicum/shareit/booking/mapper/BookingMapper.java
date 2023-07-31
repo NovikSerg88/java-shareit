@@ -37,9 +37,9 @@ public class BookingMapper {
 
     public Booking mapToBooking(BookingRequestDto dto, Long bookerId) {
         User booker = userRepository.findById(bookerId)
-                .orElseThrow(() -> new NotFoundException("User with ID = {} not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         Item item = itemRepository.findById(dto.getItemId())
-                .orElseThrow(() -> new NotFoundException("Item with ID = {} not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         return Booking.builder()
                 .start(dto.getStart())
