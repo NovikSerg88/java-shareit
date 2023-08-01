@@ -26,8 +26,7 @@ public class ItemController {
     public ItemDto createItem(@RequestHeader(USER_HEADER) Long userId,
                                               @RequestBody @Valid ItemDto dto) {
         log.info("Received POST request to create Item {} by user with id = {}", dto, userId);
-        dto.setOwnerId(userId);
-        return itemService.saveItem(dto);
+        return itemService.saveItem(dto, userId);
     }
 
     @PatchMapping("/{itemId}")
@@ -36,8 +35,7 @@ public class ItemController {
                                               @RequestBody ItemDto dto,
                                               @PathVariable("itemId") Long itemId) {
         log.info("Received PATCH request to update Item {} by user with id = {}", dto, userId);
-        dto.setId(itemId);
-        return itemService.update(dto, userId);
+        return itemService.update(dto, userId, itemId);
     }
 
     @GetMapping("/{itemId}")
@@ -65,9 +63,7 @@ public class ItemController {
                                                        @RequestHeader(USER_HEADER) Long userId,
                                                        @RequestBody @Valid CommentRequest dto) {
         log.info("Received POST request to create comment to item with ID={} by user with ID={}", itemId, userId);
-        dto.setUserId(userId);
-        dto.setItemId(itemId);
-        return commentService.saveComment(dto);
+        return commentService.saveComment(dto, userId, itemId);
     }
 
 }

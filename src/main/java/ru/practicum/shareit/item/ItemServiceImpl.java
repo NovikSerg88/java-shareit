@@ -47,22 +47,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto update(ItemDto patchDto, Long ownerId) {
-        Item toUpdate = findItemByIdOrThrow(patchDto.getId());
+    public ItemDto update(ItemDto dto, Long ownerId, Long itemId) {
+        Item item = findItemByIdOrThrow(itemId);
         checkUserExists(ownerId);
-        checkItemBelongsToUser(toUpdate, ownerId);
-        updateItem(patchDto, toUpdate);
-        itemRepository.save(toUpdate);
-        return toItemDto(toUpdate);
+        checkItemBelongsToUser(item, ownerId);
+        updateItem(dto, item);
+        itemRepository.save(item);
+        return itemMapper.mapToDto(item);
     }
 
     @Override
-    public ItemDto saveItem(ItemDto dto) {
-        Item item = itemMapper.mapToItem(dto);
-        System.out.println(item);
+    public ItemDto saveItem(ItemDto dto, Long userId) {
+        Item item = itemMapper.mapToItem(dto, userId);
         Item saved = itemRepository.save(item);
-        System.out.println(saved);
-        return toItemDto(saved);
+        return itemMapper.mapToDto(saved);
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +82,7 @@ public class ItemServiceImpl implements ItemService {
 
         return items
                 .stream()
-                .map(this::toItemDto)
+                .map(itemMapper::mapToDto)
                 .collect(Collectors.toList());
     }
 
@@ -145,16 +143,6 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private ItemDto toItemDto(Item item) {
-        return ItemDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.getAvailable())
-                .ownerId(item.getOwner().getId())
-                .build();
-    }
-
     private Consumer<Booking> addLastBookings(ItemDto dto) {
         return b -> {
             dto.setLastBooking(BookingResponseDto.builder()
@@ -165,7 +153,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Predicate<Booking> isStartedAndApprovedBeforeNow(LocalDateTime now) {
-        Object BookingStatus;
         return b -> (b.getEnd().isBefore(now) || (b.getEnd().isAfter(now) && b.getStart().isBefore(now)))
                 && b.getStatus().equals(APPROVED);
     }
@@ -184,7 +171,6 @@ public class ItemServiceImpl implements ItemService {
                 && (b.getStatus().equals(WAITING)
                 || b.getStatus().equals(APPROVED));
     }
-
 
     private List<ItemDto> createItemDtos(Map<Long, Item> idToItem,
                                          Map<Long, List<CommentResponse>> itemIdToComments) {

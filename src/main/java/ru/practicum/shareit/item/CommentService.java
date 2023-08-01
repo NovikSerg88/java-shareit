@@ -9,7 +9,7 @@ import java.util.Set;
 
 public interface CommentService {
 
-    CommentResponse saveComment(CommentRequest commentRequest);
+    CommentResponse saveComment(CommentRequest commentRequest, Long userId, Long itemId);
 
     List<CommentResponse> getCommentsOfItem(Long itemId);
 

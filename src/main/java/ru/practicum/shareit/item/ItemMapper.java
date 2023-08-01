@@ -30,8 +30,8 @@ public class ItemMapper {
     }
 
 
-    public Item mapToItem(ItemDto itemDto) {
-        User owner = userRepository.findById(itemDto.getOwnerId())
+    public Item mapToItem(ItemDto itemDto, Long userId) {
+        User owner = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new NotFoundException("User not found."));
 

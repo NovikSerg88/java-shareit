@@ -23,8 +23,8 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper mapper;
 
     @Override
-    public CommentResponse saveComment(CommentRequest commentRequest) {
-        Comment saved = commentRepository.save(mapper.mapToComment(commentRequest));
+    public CommentResponse saveComment(CommentRequest commentRequest, Long userId, Long itemId) {
+        Comment saved = commentRepository.save(mapper.mapToComment(commentRequest, userId, itemId));
         return mapper.mapToDto(saved);
     }
 

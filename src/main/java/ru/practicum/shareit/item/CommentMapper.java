@@ -35,12 +35,12 @@ public class CommentMapper {
                 .build();
     }
 
-    public Comment mapToComment(CommentRequest dto) {
-        User user = userRepository.findById(dto.getUserId())
+    public Comment mapToComment(CommentRequest dto, Long userId, Long itemId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with ID=%d not found."));
-        Item item = itemRepository.findItemByIdWithBookingsFetched(dto.getItemId())
+        Item item = itemRepository.findItemByIdWithBookingsFetched(itemId)
                 .orElseThrow(() -> new NotFoundException("Item with ID=%d not found."));
-        checkUserBookedItem(dto, item);
+        checkUserBookedItem(item, userId);
         return Comment.builder()
                 .text(dto.getText())
                 .item(item)
@@ -49,9 +49,9 @@ public class CommentMapper {
                 .build();
     }
 
-    private void checkUserBookedItem(CommentRequest dto, Item item) {
+    private void checkUserBookedItem(Item item, Long userId) {
         Optional<Booking> booking = item.getBookings().stream()
-                .filter(hasUserBookedAnItem(dto.getUserId()))
+                .filter(hasUserBookedAnItem(userId))
                 .findFirst();
         if (booking.isEmpty()) {
             throw new ValidationException("User with ID=%d cannot post comment to item with ID=%d " +
