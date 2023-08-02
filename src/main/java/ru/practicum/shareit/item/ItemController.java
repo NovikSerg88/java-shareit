@@ -24,7 +24,7 @@ public class ItemController {
     @PostMapping
     @ResponseBody
     public ItemDto createItem(@RequestHeader(USER_HEADER) Long userId,
-                                              @RequestBody @Valid ItemDto dto) {
+                              @RequestBody @Valid ItemDto dto) {
         log.info("Received POST request to create Item {} by user with id = {}", dto, userId);
         return itemService.saveItem(dto, userId);
     }
@@ -32,15 +32,15 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     @ResponseBody
     public ItemDto updateItem(@RequestHeader(USER_HEADER) Long userId,
-                                              @RequestBody ItemDto dto,
-                                              @PathVariable("itemId") Long itemId) {
+                              @RequestBody ItemDto dto,
+                              @PathVariable("itemId") Long itemId) {
         log.info("Received PATCH request to update Item {} by user with id = {}", dto, userId);
         return itemService.update(dto, userId, itemId);
     }
 
     @GetMapping("/{itemId}")
     public ItemDto getItemById(@PathVariable("itemId") Long itemId,
-                                               @RequestHeader(USER_HEADER) Long userId) {
+                               @RequestHeader(USER_HEADER) Long userId) {
         log.info("Received request to GET Item by id = {}", itemId);
         return itemService.findById(itemId, userId);
     }
@@ -60,10 +60,22 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     @ResponseBody
     public CommentResponse postComment(@PathVariable("itemId") Long itemId,
-                                                       @RequestHeader(USER_HEADER) Long userId,
-                                                       @RequestBody @Valid CommentRequest dto) {
+                                       @RequestHeader(USER_HEADER) Long userId,
+                                       @RequestBody @Valid CommentRequest dto) {
         log.info("Received POST request to create comment to item with ID={} by user with ID={}", itemId, userId);
         return commentService.saveComment(dto, userId, itemId);
     }
 
+    @DeleteMapping("/{itemId}")
+    public void deleteItem(@PathVariable("itemId") Long itemId,
+                           @RequestHeader(USER_HEADER) Long userId) {
+        log.info("Received DELETE request to delete item with ID = {} that belongs user with ID = {}", itemId, userId);
+        itemService.deleteItem(userId, itemId);
+    }
+
+    @DeleteMapping
+    public void deleteItemsForUser(@RequestHeader(USER_HEADER) Long userId) {
+        log.info("Received DELETE request to delete items of user with ID = {}", userId);
+        itemService.deleteItemsForUser(userId);
+    }
 }
