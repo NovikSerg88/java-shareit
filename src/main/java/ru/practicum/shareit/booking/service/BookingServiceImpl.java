@@ -14,6 +14,9 @@ import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
@@ -29,11 +32,16 @@ public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
     private final BookingMapper bookingMapper;
 
     @Override
     public BookingResponseDto create(BookingRequestDto bookingRequestDto, Long bookerId) {
-        Booking booking = bookingMapper.mapToBooking(bookingRequestDto, bookerId);
+        User booker = userRepository.findById(bookerId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Item item = itemRepository.findById(bookingRequestDto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Item not found"));
+        Booking booking = bookingMapper.mapToBooking(bookingRequestDto, item, booker);
         if (booking.getItem().getAvailable().equals(false)) {
             throw new ValidationException("Item is not available");
         }

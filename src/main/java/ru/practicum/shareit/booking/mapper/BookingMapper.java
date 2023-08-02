@@ -2,28 +2,23 @@ package ru.practicum.shareit.booking.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.dto.BookerResponseDto;
+import ru.practicum.shareit.booking.dto.ItemResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserRepository;
-
 
 @Component
 @RequiredArgsConstructor
 public class BookingMapper {
 
-    private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
-
     public BookingResponseDto mapToBookingResponseDto(Booking booking) {
-        BookingResponseDto.Item item = new BookingResponseDto.Item(booking.getItem().getId(),
+        ItemResponseDto item = new ItemResponseDto(booking.getItem().getId(),
                 booking.getItem().getName());
-        BookingResponseDto.User booker = new BookingResponseDto.User(booking.getBooker().getId());
+        BookerResponseDto booker = new BookerResponseDto(booking.getBooker().getId());
 
         return BookingResponseDto.builder()
                 .id(booking.getId())
@@ -35,12 +30,7 @@ public class BookingMapper {
                 .build();
     }
 
-    public Booking mapToBooking(BookingRequestDto dto, Long bookerId) {
-        User booker = userRepository.findById(bookerId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Item item = itemRepository.findById(dto.getItemId())
-                .orElseThrow(() -> new NotFoundException("Item not found"));
-
+    public Booking mapToBooking(BookingRequestDto dto, Item item, User booker) {
         return Booking.builder()
                 .start(dto.getStart())
                 .end(dto.getEnd())
