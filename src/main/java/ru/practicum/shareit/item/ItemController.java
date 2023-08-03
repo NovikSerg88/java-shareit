@@ -1,54 +1,81 @@
 package ru.practicum.shareit.item;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentRequest;
+import ru.practicum.shareit.item.dto.CommentResponse;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
+
 
 @RestController
-@AllArgsConstructor
-@Slf4j
 @RequestMapping("/items")
+@RequiredArgsConstructor
+@Slf4j
 public class ItemController {
-    private static final String SHARER = "X-Sharer-User-Id";
+
     private final ItemService itemService;
+    private final CommentService commentService;
+    private static final String USER_HEADER = "X-Sharer-User-Id";
 
     @PostMapping
-    public ResponseEntity<ItemDto> save(@Valid @RequestBody ItemDto itemDto,
-                                        @RequestHeader(SHARER) Long userId) {
-        log.info("POST request /items with owner ID = {}", userId);
-        return new ResponseEntity<>(itemService.save(itemDto, userId), HttpStatus.OK);
+    @ResponseBody
+    public ItemDto createItem(@RequestHeader(USER_HEADER) Long userId,
+                              @RequestBody @Valid ItemDto dto) {
+        log.info("Received POST request to create Item {} by user with id = {}", dto, userId);
+        return itemService.saveItem(dto, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public ResponseEntity<ItemDto> update(@RequestBody Map<String, Object> updates,
-                                          @PathVariable("itemId") Long id,
-                                          @RequestHeader(SHARER) Long userId) {
-        log.info("PATCH request /items/itemId = {} with owner ID = {}", id, userId);
-        return new ResponseEntity<>(itemService.update(updates, id, userId), HttpStatus.OK);
+    @ResponseBody
+    public ItemDto updateItem(@RequestHeader(USER_HEADER) Long userId,
+                              @RequestBody ItemDto dto,
+                              @PathVariable("itemId") Long itemId) {
+        log.info("Received PATCH request to update Item {} by user with id = {}", dto, userId);
+        return itemService.update(dto, userId, itemId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getById(@PathVariable("itemId") Long id) {
-        log.info("GET request /items/itemId = {}", id);
-        return itemService.getById(id);
-    }
-
-    @GetMapping("/search")
-    public List<ItemDto> search(@RequestParam(required = false) String text) {
-        log.info("GET request /items/search item with text = {}", text);
-        return itemService.search(text);
+    public ItemDto getItemById(@PathVariable("itemId") Long itemId,
+                               @RequestHeader(USER_HEADER) Long userId) {
+        log.info("Received request to GET Item by id = {}", itemId);
+        return itemService.findById(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemDto> getByUser(@RequestHeader(SHARER) Long userId) {
-        log.info("GET request /items by user ID = {}", userId);
-        return itemService.getByUser(userId);
+    public List<ItemDto> getItemsForUser(@RequestHeader(USER_HEADER) Long userId) {
+        log.info("Received request to GET items for user with id={}", userId);
+        return itemService.getItemsForUser(userId);
+    }
+
+    @GetMapping("/search")
+    public List<ItemDto> searchItems(@RequestParam("text") String query) {
+        log.info("Received GET request to search for items by query = {}", query);
+        return itemService.searchAvailableItems(query);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    @ResponseBody
+    public CommentResponse postComment(@PathVariable("itemId") Long itemId,
+                                       @RequestHeader(USER_HEADER) Long userId,
+                                       @RequestBody @Valid CommentRequest dto) {
+        log.info("Received POST request to create comment to item with ID={} by user with ID={}", itemId, userId);
+        return commentService.saveComment(dto, userId, itemId);
+    }
+
+    @DeleteMapping("/{itemId}")
+    public void deleteItem(@PathVariable("itemId") Long itemId,
+                           @RequestHeader(USER_HEADER) Long userId) {
+        log.info("Received DELETE request to delete item with ID = {} that belongs user with ID = {}", itemId, userId);
+        itemService.deleteItem(userId, itemId);
+    }
+
+    @DeleteMapping
+    public void deleteItemsForUser(@RequestHeader(USER_HEADER) Long userId) {
+        log.info("Received DELETE request to delete items of user with ID = {}", userId);
+        itemService.deleteItemsForUser(userId);
     }
 }
