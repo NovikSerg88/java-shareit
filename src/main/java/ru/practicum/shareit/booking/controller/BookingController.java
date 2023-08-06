@@ -8,6 +8,8 @@ import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @Slf4j
@@ -44,16 +46,20 @@ public class BookingController {
     }
 
     @GetMapping
-    public List<BookingResponseDto> getBookingsOfUser(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
-                                                      @RequestHeader(USER_HEADER) Long bookerId) {
+    public List<BookingResponseDto> getBookingsOfUser(@RequestHeader(USER_HEADER) Long bookerId,
+                                                      @RequestParam(value = "state", required = false, defaultValue = "ALL") String state,
+                                                      @RequestParam(value = "from", required = false, defaultValue = "0") @Min(0) int from,
+                                                      @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) int size) {
         log.info("Received GET request to get all bookings of user with id={} in state={}", bookerId, state);
-        return bookingService.getBookingsOfUser(state, bookerId);
+        return bookingService.getBookingsOfUser(bookerId, state, from, size);
     }
 
     @GetMapping("/owner")
-    public List<BookingResponseDto> getBookingsOfOwner(@RequestParam(name = "state", required = false, defaultValue = "ALL") String state,
-                                                       @RequestHeader(USER_HEADER) Long ownerId) {
+    public List<BookingResponseDto> getBookingsOfOwner(@RequestHeader(USER_HEADER) Long ownerId,
+                                                       @RequestParam(value = "state", required = false, defaultValue = "ALL") String state,
+                                                       @RequestParam(value = "from", required = false, defaultValue = "0") @Min(0) int from,
+                                                       @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) int size) {
         log.info("Received GET request to get all bookings of owner with id={}, in state={}", ownerId, state);
-        return bookingService.getBookingsOfOwner(state, ownerId);
+        return bookingService.getBookingsOfOwner(ownerId, state, from, size);
     }
 }
