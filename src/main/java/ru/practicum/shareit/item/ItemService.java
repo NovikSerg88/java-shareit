@@ -11,9 +11,9 @@ public interface ItemService {
 
     ItemDto saveItem(ItemDto dto, Long userId);
 
-    List<ItemDto> getItemsForUser(long userId);
+    List<ItemDto> getItemsForUser(long userId, int from, int size);
 
-    List<ItemDto> searchAvailableItems(String query);
+    List<ItemDto> searchAvailableItems(String query, int from, int size);
 
     void deleteItemsForUser(long userId);
 

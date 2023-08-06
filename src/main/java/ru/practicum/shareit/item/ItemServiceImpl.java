@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -77,8 +79,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemDto> getItemsForUser(long userId) {
-        Map<Long, Item> idToItem = getItemsMapFetchedWithBookings(userId);
+    public List<ItemDto> getItemsForUser(long userId, int from, int size) {
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.ASC, "name"));
+        Map<Long, Item> idToItem = getItemsMapFetchedWithBookings(userId, pageRequest);
         Map<Long, List<CommentResponse>> itemIdToComments =
                 commentService.getItemIdToComments(idToItem.keySet());
         return createItemDtos(idToItem, itemIdToComments);
@@ -86,11 +89,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemDto> searchAvailableItems(String query) {
+    public List<ItemDto> searchAvailableItems(String query, int from, int size) {
         if (ObjectUtils.isEmpty(query)) {
             return Collections.emptyList();
         }
-        List<Item> items = itemRepository.searchAllItemFetchOwnerByQuery(query);
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.ASC, "name"));
+        List<Item> items = itemRepository.searchAllItemFetchOwnerByQuery(query, pageRequest);
 
         return items
                 .stream()
@@ -156,12 +160,10 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Consumer<Booking> addLastBookings(ItemDto dto) {
-        return b -> {
-            dto.setLastBooking(BookingResponseDto.builder()
-                    .id(b.getId())
-                    .bookerId(b.getBooker().getId())
-                    .build());
-        };
+        return b -> dto.setLastBooking(BookingResponseDto.builder()
+                .id(b.getId())
+                .bookerId(b.getBooker().getId())
+                .build());
     }
 
     private Predicate<Booking> isStartedAndApprovedBeforeNow(LocalDateTime now) {
@@ -170,12 +172,10 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Consumer<Booking> addNextBooking(ItemDto dto) {
-        return b -> {
-            dto.setNextBooking(BookingResponseDto.builder()
-                    .id(b.getId())
-                    .bookerId(b.getBooker().getId())
-                    .build());
-        };
+        return b -> dto.setNextBooking(BookingResponseDto.builder()
+                .id(b.getId())
+                .bookerId(b.getBooker().getId())
+                .build());
     }
 
     private Predicate<Booking> isActiveAfterNow(LocalDateTime now) {
@@ -212,8 +212,8 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private Map<Long, Item> getItemsMapFetchedWithBookings(long userId) {
-        return itemRepository.findAllByOwnerIdFetchBookings(userId)
+    private Map<Long, Item> getItemsMapFetchedWithBookings(long userId, PageRequest pageRequest) {
+        return itemRepository.findAllByOwnerIdFetchBookings(userId, pageRequest)
                 .stream()
                 .collect(Collectors.toMap(Item::getId, Function.identity()));
     }
