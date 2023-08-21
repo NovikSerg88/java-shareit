@@ -294,7 +294,7 @@ public class ItemServiceImplTest {
     }
 
     @Test
-    void DeleteItemsForUser() {
+    void deleteItemsForUser() {
         long userId = 1L;
 
         itemServiceImpl.deleteItemsForUser(userId);
