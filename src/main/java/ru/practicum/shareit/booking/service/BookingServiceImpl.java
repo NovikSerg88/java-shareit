@@ -22,6 +22,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,12 +90,15 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getBookingsOfUser(Long userId, String stringState, int from, int size) {
-        isUserExists(userId);
-        isRequestValid(from);
+    public List<BookingResponseDto> getBookingsOfUser(Long userId, String stringState, Integer from, Integer size) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        if (from < 0) {
+            throw new ValidationException("Page cant be less then null");
+        }
         PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
         Page<Booking> bookings;
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         State state = getState(stringState);
         switch (state) {
             case ALL:
@@ -125,11 +129,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingResponseDto> getBookingsOfOwner(Long userId, String stringState, int from, int size) {
-        isUserExists(userId);
-        isRequestValid(from);
-        PageRequest pageRequest = PageRequest.of(from/size, size, Sort.by(Sort.Direction.DESC, "start"));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        if (from < 0) {
+            throw new ValidationException("Page cant be less then null");
+        }
+        PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
         Page<Booking> bookings;
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         State state = getState(stringState);
         switch (state) {
             case ALL:
@@ -172,16 +179,5 @@ public class BookingServiceImpl implements BookingService {
             }
         }
         return state;
-    }
-
-    private void isUserExists(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-    }
-
-    private void isRequestValid(int from) {
-        if (from < 0) {
-            throw new ValidationException("Page cant be less then null");
-        }
     }
 }

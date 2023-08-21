@@ -48,8 +48,8 @@ public class BookingController {
     @GetMapping
     public List<BookingResponseDto> getBookingsOfUser(@RequestHeader(USER_HEADER) Long bookerId,
                                                       @RequestParam(value = "state", required = false, defaultValue = "ALL") String state,
-                                                      @RequestParam(value = "from", required = false, defaultValue = "0") @Min(0) int from,
-                                                      @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) int size) {
+                                                      @RequestParam(value = "from", required = false, defaultValue = "0") @Min(0) Integer from,
+                                                      @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) Integer size) {
         log.info("Received GET request to get all bookings of user with id={} in state={}", bookerId, state);
         return bookingService.getBookingsOfUser(bookerId, state, from, size);
     }

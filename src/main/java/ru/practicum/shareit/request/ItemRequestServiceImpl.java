@@ -36,7 +36,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestResponseDto> getAllUserRequests(Long userId) {
-        isUserExists(userId);
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
         List<ItemRequest> requests = itemRequestRepository.findAllByRequesterId(userId);
         List<ItemRequestResponseDto> responseDtos = new ArrayList<>();
         for (ItemRequest itemRequest : requests) {
@@ -68,12 +69,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             responseDtos.add(requestResponseDto);
         }
         return responseDtos;
-
     }
 
     @Override
     public ItemRequestResponseDto getRequestById(Long requestId, Long userId) {
-        isUserExists(userId);
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
         ItemRequest itemRequest = itemRequestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("ItemRequest not found"));
         List<Item> items = itemRepository.findAllByRequestId(requestId);
@@ -83,10 +84,5 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         ItemRequestResponseDto itemRequestResponseDto = requestMapper.toResponseDto(itemRequest);
         itemRequestResponseDto.setItems(itemResponseDtos);
         return itemRequestResponseDto;
-    }
-
-    private void isUserExists(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
     }
 }
