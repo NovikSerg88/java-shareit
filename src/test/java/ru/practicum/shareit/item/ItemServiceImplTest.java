@@ -399,7 +399,6 @@ public class ItemServiceImplTest {
         Long itemId = 1L;
 
         ItemDto dto = itemDto;
-        
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
 
         User owner = new User();
