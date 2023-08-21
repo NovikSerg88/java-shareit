@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.BookingResponseDto;
 import ru.practicum.shareit.item.dto.CommentResponse;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -248,6 +249,32 @@ public class ItemServiceImplTest {
     }
 
     @Test
+    void getItemsOfUserAndReturnFittingInSize() {
+        long userId = 1L;
+        int from = 0;
+        int size = 2;
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.ASC, "name"));
+
+        List<Item> items = new ArrayList<>(); // Prepare the items as needed
+
+        List<Item> expectedItems = items.subList(0, Math.min(size, items.size()));
+        when(itemRepository.findAllByOwnerIdFetchBookings(userId, pageRequest)).thenReturn(expectedItems);
+
+        List<ItemDto> expectedDtos = new ArrayList<>();
+        ItemServiceImpl spyItemService = spy(itemServiceImpl);
+
+        List<ItemDto> result = spyItemService.getItemsForUser(userId, from, size);
+
+        assertEquals(expectedDtos, result);
+        verify(itemRepository).findAllByOwnerIdFetchBookings(userId, pageRequest);
+        verify(commentService).getItemIdToComments(anySet());
+
+        for (Item item : expectedItems) {
+            verify(itemMapper).mapToDto(item);
+        }
+    }
+
+    @Test
     public void searchAvailableItemsWithEmptyQuery() {
         String query = "";
         int from = 0;
@@ -294,6 +321,29 @@ public class ItemServiceImplTest {
     }
 
     @Test
+    void getItemsOfUserAndReturnEmptyListWhenNoItemsPresent() {
+        long userId = 1L;
+        int from = 0;
+        int size = 10;
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.ASC, "name"));
+
+        List<Item> items = new ArrayList<>();
+
+        when(itemRepository.findAllByOwnerIdFetchBookings(userId, pageRequest)).thenReturn(items);
+
+        List<ItemDto> expectedDtos = new ArrayList<>();
+        ItemServiceImpl spyItemService = spy(itemServiceImpl);
+
+        List<ItemDto> result = spyItemService.getItemsForUser(userId, from, size);
+
+        assertEquals(expectedDtos, result);
+        verify(itemRepository).findAllByOwnerIdFetchBookings(userId, pageRequest);
+        verify(commentService).getItemIdToComments(anySet());
+
+        verifyNoInteractions(itemMapper);
+    }
+
+    @Test
     void deleteItemsForUser() {
         long userId = 1L;
 
@@ -310,6 +360,58 @@ public class ItemServiceImplTest {
         itemServiceImpl.deleteItem(userId, itemId);
 
         verify(itemRepository).deleteItemByIdAndOwner_Id(userId, itemId);
+    }
+
+    @Test
+    void testSetBookingsSuccess() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> bookings = new ArrayList<>();
+        Booking booking1 = new Booking(1L, now.minusHours(2), now, item, user, Status.WAITING);
+
+        Booking booking2 = new Booking(2L, now.plusHours(1), now, item, user, Status.APPROVED);
+        Booking booking3 = new Booking(3L, now.plusHours(3), now, item, user, Status.APPROVED);
+        bookings.add(booking1);
+        bookings.add(booking2);
+        bookings.add(booking3);
+        item.setBookings(bookings);
+
+        ItemDto expectedDto = itemDto;
+        BookingResponseDto nextBookingDto = BookingResponseDto.builder()
+                .id(booking2.getId())
+                .bookerId(booking2.getBooker().getId())
+                .build();
+        BookingResponseDto lastBookingDto = BookingResponseDto.builder()
+                .id(booking3.getId())
+                .bookerId(booking3.getBooker().getId())
+                .build();
+        expectedDto.setNextBooking(nextBookingDto);
+        expectedDto.setLastBooking(lastBookingDto);
+
+        ItemDto resultDto = new ItemDto(1L, 1L, "item", "description", true, 1L, lastBookingDto, nextBookingDto, null);
+
+        assertEquals(expectedDto.getNextBooking(), resultDto.getNextBooking());
+        assertEquals(expectedDto.getLastBooking(), resultDto.getLastBooking());
+    }
+
+    @Test
+    void testUpdateThrowsExceptionWhenUserNotFound() {
+        Long ownerId = 1L;
+        Long itemId = 1L;
+
+        ItemDto dto = itemDto;
+        
+        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
+
+        User owner = new User();
+        when(userRepository.getReferenceById(ownerId)).thenReturn(owner);
+
+        assertThrows(NotFoundException.class, () -> {
+            itemServiceImpl.update(dto, ownerId, itemId);
+        });
+
+        verify(itemRepository).findById(itemId);
+        verify(userRepository).getReferenceById(ownerId);
+        verifyNoMoreInteractions(itemRepository, userRepository);
     }
 }
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.UserAlreadyExistsException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 
@@ -77,6 +78,57 @@ public class UserServiceImplTest {
         final NotFoundException exception = assertThrows(NotFoundException.class,
                 () -> userService.update(updates, userDto.getId()));
         assertEquals("User with ID = 1 not found", exception.getMessage());
+    }
+
+    @Test
+    void updateByNameAndReturn() {
+        Long userId = 1L;
+        String newName = "New Name";
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("name", newName);
+
+        userService.update(updates, userId);
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).save(user);
+        verify(userMapper, times(1)).toUserDto(user);
+    }
+
+    @Test
+    void updateByEmailAndReturn() {
+        Long userId = 1L;
+        String newEmail = "newEmail@user.ru";
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).thenReturn(user);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("email", newEmail);
+
+        userService.update(updates, userId);
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).save(user);
+        verify(userMapper, times(1)).toUserDto(user);
+    }
+
+    @Test
+    void testUpdateDuplicateEmail() {
+        Long userId = 1L;
+        String existingEmail = "existing@user.ru";
+
+        User existingUser = user;
+        existingUser.setEmail(existingEmail);
+
+        List<User> userList = List.of(existingUser);
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("email", existingEmail);
+        String newEmail = (String) updates.get("email");
+        if (userList.stream().anyMatch(u -> u.getEmail().equals(newEmail) && !u.getId().equals(user.getId()))) {
+            assertThrows(UserAlreadyExistsException.class, () -> userService.update(updates, userId));
+        }
     }
 
     @Test

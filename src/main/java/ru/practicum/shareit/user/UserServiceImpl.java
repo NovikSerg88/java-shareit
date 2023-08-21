@@ -9,7 +9,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,15 +39,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto update(Map<String, Object> updates, Long userId) {
-        User user = userMapper.toUser(getUserById(userId));
-        List<UserDto> users = getUsers();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("User with ID = %d not found", userId)));
+        List<UserDto> users = userRepository.findAll().stream()
+                .map(userMapper::toUserDto)
+                .collect(Collectors.toList());
         if (updates.containsKey("name")) {
             String newName = (String) updates.get("name");
             user.setName(newName);
         }
         if (updates.containsKey("email")) {
             String newEmail = (String) updates.get("email");
-            if (users.stream().anyMatch(u -> u.getEmail().equals(newEmail) && !Objects.equals(u.getId(), user.getId()))) {
+            if (users.stream().anyMatch(u -> u.getEmail().equals(newEmail) && !u.getId().equals(user.getId()))) {
                 throw new UserAlreadyExistsException(String.format("User with ID = %d already exists", userId));
             }
             user.setEmail(newEmail);

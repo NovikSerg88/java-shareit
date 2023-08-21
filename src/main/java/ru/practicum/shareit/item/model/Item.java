@@ -17,6 +17,7 @@ import java.util.List;
 @ToString
 @Entity
 @Table(name = "items")
+@Generated
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
