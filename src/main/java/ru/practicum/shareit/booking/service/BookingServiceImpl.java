@@ -45,11 +45,12 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found"));
         Booking booking = bookingMapper.mapToBooking(bookingRequestDto, item, booker);
-        if (booking.getItem().getAvailable().equals(false)) {
+        if (booking.getItem() == null || booking.getItem().getAvailable() == null || !booking.getItem().getAvailable()) {
             throw new ValidationException("Item is not available");
         }
-        if (booking.getBooker().getId().equals(booking.getItem().getOwner().getId())) {
-            throw new NotFoundException("Owner cant book this item");
+
+        if (booking.getBooker() == null || booking.getBooker().getId().equals(booking.getItem().getOwner().getId())) {
+            throw new NotFoundException("Owner can't book this item");
         }
         return bookingMapper.mapToBookingResponseDto(bookingRepository.save(booking));
     }
@@ -58,7 +59,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponseDto update(Long bookingId, Long ownerId, Boolean approved) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking with ID=" + bookingId + " not found"));
-        if (!booking.getItem().getOwner().getId().equals(ownerId)) {
+        if (ownerId == null || !ownerId.equals(booking.getItem().getOwner().getId())) {
             throw new NotFoundException("Status of booking cannot be updated because " +
                     "user is not the owner of item.");
         }
@@ -82,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Booking with ID=" + bookingId + " not found"));
         Long bookerId = booking.getBooker().getId();
         Long ownerId = booking.getItem().getOwner().getId();
-        if (userId.equals(bookerId) || userId.equals(ownerId)) {
+        if (userId != null && (userId.equals(bookerId) || userId.equals(ownerId))) {
             return bookingMapper.mapToBookingResponseDto(booking);
         } else {
             throw new NotFoundException("Only owner or booker of a Booking can request data about it");

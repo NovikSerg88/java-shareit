@@ -44,16 +44,18 @@ public class UserServiceImpl implements UserService {
         List<UserDto> users = userRepository.findAll().stream()
                 .map(userMapper::toUserDto)
                 .collect(Collectors.toList());
-        if (updates.containsKey("name")) {
-            String newName = (String) updates.get("name");
-            user.setName(newName);
-        }
-        if (updates.containsKey("email")) {
-            String newEmail = (String) updates.get("email");
-            if (users.stream().anyMatch(u -> u.getEmail().equals(newEmail) && !u.getId().equals(user.getId()))) {
-                throw new UserAlreadyExistsException(String.format("User with ID = %d already exists", userId));
+        if (updates != null) {
+            if (updates.containsKey("name")) {
+                String newName = (String) updates.get("name");
+                user.setName(newName);
             }
-            user.setEmail(newEmail);
+            if (updates.containsKey("email")) {
+                String newEmail = (String) updates.get("email");
+                if (users.stream().anyMatch(u -> newEmail.equals(u.getEmail()) && !user.getId().equals(u.getId()))) {
+                    throw new UserAlreadyExistsException(String.format("User with ID = %d already exists", userId));
+                }
+                user.setEmail(newEmail);
+            }
         }
         return userMapper.toUserDto(userRepository.save(user));
     }

@@ -61,7 +61,7 @@ public class ItemServiceImpl implements ItemService {
         if (owner == null || owner.getId() == null) {
             throw new NotFoundException("User not found.");
         }
-        if (!item.getOwner().getId().equals(ownerId)) {
+        if (!ownerId.equals(item.getOwner().getId())) {
             throw new NotFoundException("Cannot update Item because it doesn't belong to user");
         }
         if (dto.getAvailable() != null) {
@@ -143,8 +143,8 @@ public class ItemServiceImpl implements ItemService {
             List<Booking> bookings = item.getBookings();
             bookings.stream()
                     .filter(b -> b.getStart().isAfter(now)
-                            && (b.getStatus().equals(WAITING)
-                            || b.getStatus().equals(APPROVED)))
+                            && (WAITING.equals(b.getStatus())
+                            || APPROVED.equals(b.getStatus())))
                     .min(Comparator.comparing(Booking::getStart))
                     .ifPresent(b -> dto.setNextBooking(BookingResponseDto.builder()
                             .id(b.getId())
@@ -153,7 +153,7 @@ public class ItemServiceImpl implements ItemService {
 
             bookings.stream()
                     .filter(b -> (b.getEnd().isBefore(now) || (b.getEnd().isAfter(now) && b.getStart().isBefore(now)))
-                            && b.getStatus().equals(APPROVED))
+                            && APPROVED.equals(b.getStatus()))
                     .max(Comparator.comparing(Booking::getStart))
                     .ifPresent(b -> dto.setLastBooking(BookingResponseDto.builder()
                             .id(b.getId())

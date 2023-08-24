@@ -38,9 +38,9 @@ public class CommentServiceImpl implements CommentService {
         Item item = itemRepository.findItemByIdWithBookingsFetched(itemId)
                 .orElseThrow(() -> new NotFoundException("Item with ID=%d not found."));
         boolean userHasBooked = item.getBookings().stream()
-                .anyMatch(booking -> booking.getBooker().getId().equals(userId)
-                        && booking.getStatus().equals(APPROVED)
-                        && booking.getEnd().isBefore(LocalDateTime.now()));
+                .anyMatch(booking -> userId.equals(booking.getBooker().getId())
+                        && APPROVED.equals(booking.getStatus())
+                        && LocalDateTime.now().isAfter(booking.getEnd()));
         if (!userHasBooked) {
             throw new ValidationException("User with ID=%d cannot post comment to item with ID=%d " +
                     "because the user never booked the item.");
