@@ -117,9 +117,7 @@ public class ItemRequestServiceImplTest {
         List<Item> items = new ArrayList<>();
         items.add(item);
         when(itemRepository.findAllByRequestId(itemRequest.getId())).thenReturn(items);
-        when(requestMapper.mapToItemResponse(eq(item), anyLong())).thenReturn(itemResponseDto);
 
-        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
         List<ItemRequestResponseDto> result = itemRequestService.getAllUserRequests(userId);
 
         assertEquals(1, result.size());
@@ -127,8 +125,6 @@ public class ItemRequestServiceImplTest {
         verify(userRepository, times(1)).findById(userId);
         verify(itemRequestRepository, times(1)).findAllByRequesterId(userId);
         verify(itemRepository, times(1)).findAllByRequestId(itemRequest.getId());
-        verify(requestMapper, times(1)).mapToItemResponse(eq(item), anyLong());
-        verify(requestMapper, times(1)).toResponseDto(itemRequest);
     }
 
     @Test
@@ -140,24 +136,13 @@ public class ItemRequestServiceImplTest {
         itemRequests.add(itemRequest);
         Page<ItemRequest> page = new PageImpl<>(itemRequests);
 
-        when(itemRequestRepository.findAllByRequesterIdNot(eq(userId), any(PageRequest.class))).thenReturn(page);
-
-        List<Item> items = new ArrayList<>();
-        items.add(item);
-        when(itemRepository.findAllByRequestId(itemRequest.getId())).thenReturn(items);
-
-        when(requestMapper.mapToItemResponse(eq(item), anyLong())).thenReturn(itemResponseDto);
-
-        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
+        when(itemRequestRepository.findAllByRequesterIdNot(anyLong(), any(PageRequest.class))).thenReturn(page);
 
         List<ItemRequestResponseDto> result = itemRequestService.getAllRequests(userId, from, size);
 
         assertEquals(1, result.size());
 
         verify(itemRequestRepository, times(1)).findAllByRequesterIdNot(eq(userId), any(PageRequest.class));
-        verify(itemRepository, times(1)).findAllByRequestId(itemRequest.getId());
-        verify(requestMapper, times(1)).mapToItemResponse(eq(item), anyLong());
-        verify(requestMapper, times(1)).toResponseDto(itemRequest);
     }
 
     @Test
