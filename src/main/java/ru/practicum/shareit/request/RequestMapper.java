@@ -1,5 +1,6 @@
 package ru.practicum.shareit.request;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -8,6 +9,7 @@ import ru.practicum.shareit.request.dto.ItemResponseDto;
 import ru.practicum.shareit.user.User;
 
 @Component
+@RequiredArgsConstructor
 public class RequestMapper {
 
     public ItemRequest toItemRequest(ItemRequestDto dto, User requester) {

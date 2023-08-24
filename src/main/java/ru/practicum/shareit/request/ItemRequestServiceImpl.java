@@ -14,7 +14,6 @@ import ru.practicum.shareit.request.dto.ItemResponseDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,38 +37,23 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestResponseDto> getAllUserRequests(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        List<ItemRequest> requests = itemRequestRepository.findAllByRequesterId(userId);
-        List<ItemRequestResponseDto> responseDtos = new ArrayList<>();
-        for (ItemRequest itemRequest : requests) {
-            List<Item> items = itemRepository.findAllByRequestId(itemRequest.getId());
-            List<ItemResponseDto> itemResponseDtos = items.stream()
-                    .map(item -> requestMapper.mapToItemResponse(item, itemRequest.getId()))
-                    .collect(Collectors.toList());
 
-            ItemRequestResponseDto requestResponseDto = requestMapper.toResponseDto(itemRequest);
-            requestResponseDto.setItems(itemResponseDtos);
-            responseDtos.add(requestResponseDto);
-        }
-        return responseDtos;
+        return itemRequestRepository.findAllByRequesterId(userId)
+                .stream()
+                .map(this::mapItemRequestToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ItemRequestResponseDto> getAllRequests(Long userId, int from, int size) {
         PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
-        Page<ItemRequest> page = itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest);
-        List<ItemRequestResponseDto> responseDtos = new ArrayList<>();
-        for (ItemRequest itemRequest : page) {
-            List<Item> items = itemRepository.findAllByRequestId(itemRequest.getId());
-            List<ItemResponseDto> itemResponseDtos = items.stream()
-                    .map(item -> requestMapper.mapToItemResponse(item, itemRequest.getId()))
-                    .collect(Collectors.toList());
+        Page<ItemRequest> requests = itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest);
 
-            ItemRequestResponseDto requestResponseDto = requestMapper.toResponseDto(itemRequest);
-            requestResponseDto.setItems(itemResponseDtos);
-            responseDtos.add(requestResponseDto);
-        }
-        return responseDtos;
+        return requests.stream()
+                .map(this::mapItemRequestToDto)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public ItemRequestResponseDto getRequestById(Long requestId, Long userId) {
@@ -84,5 +68,19 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         ItemRequestResponseDto itemRequestResponseDto = requestMapper.toResponseDto(itemRequest);
         itemRequestResponseDto.setItems(itemResponseDtos);
         return itemRequestResponseDto;
+    }
+
+    private ItemRequestResponseDto mapItemRequestToDto(ItemRequest itemRequest) {
+        List<ItemResponseDto> items = itemRepository.findAllByRequestId(itemRequest.getId())
+                .stream()
+                .map(item -> requestMapper.mapToItemResponse(item, itemRequest.getId()))
+                .collect(Collectors.toList());
+
+        return ItemRequestResponseDto.builder()
+                .id(itemRequest.getId())
+                .description(itemRequest.getDescription())
+                .created(itemRequest.getCreated())
+                .items(items)
+                .build();
     }
 }
