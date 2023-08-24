@@ -7,7 +7,7 @@ import javax.validation.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
-public class CommentRequest {
+public final class CommentRequest {
     @NotEmpty
     private String text;
     private Long userId;

@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ItemRequestResponseDto {
+public final class ItemRequestResponseDto {
     private Long id;
     private String description;
     private LocalDateTime created;

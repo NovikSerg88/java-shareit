@@ -9,7 +9,7 @@ import javax.validation.constraints.NotEmpty;
 @Data
 @Builder
 @AllArgsConstructor
-public class ItemRequestDto {
+public final class ItemRequestDto {
     @NotEmpty
     private String description;
     private Long requesterId;
