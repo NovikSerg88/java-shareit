@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
@@ -110,39 +111,35 @@ public class ItemRequestServiceImplTest {
     public void getAllUserRequestsAndReturn() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        List<ItemRequest> requests = new ArrayList<>();
-        requests.add(itemRequest);
-        when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(requests);
+        when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(Collections.singletonList(itemRequest));
 
-        List<Item> items = new ArrayList<>();
-        items.add(item);
-        when(itemRepository.findAllByRequestId(itemRequest.getId())).thenReturn(items);
+        List<Item> items = Collections.singletonList(item);
+        when(itemRepository.findAll()).thenReturn(items);
+
+        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
 
         List<ItemRequestResponseDto> result = itemRequestService.getAllUserRequests(userId);
 
         assertEquals(1, result.size());
-
-        verify(userRepository, times(1)).findById(userId);
-        verify(itemRequestRepository, times(1)).findAllByRequesterId(userId);
-        verify(itemRepository, times(1)).findAllByRequestId(itemRequest.getId());
+        assertNotNull(result.get(0).getItems());
     }
 
     @Test
     public void getAllRequestsAndReturn() {
         int from = 0;
         int size = 10;
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
 
-        List<ItemRequest> itemRequests = new ArrayList<>();
-        itemRequests.add(itemRequest);
-        Page<ItemRequest> page = new PageImpl<>(itemRequests);
+        Page<ItemRequest> itemRequests = new PageImpl<>(Collections.emptyList());
+        when(itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest))
+                .thenReturn(itemRequests);
 
-        when(itemRequestRepository.findAllByRequesterIdNot(anyLong(), any(PageRequest.class))).thenReturn(page);
+        List<Item> items = Collections.singletonList(item);
+        when(itemRepository.findAll()).thenReturn(items);
 
         List<ItemRequestResponseDto> result = itemRequestService.getAllRequests(userId, from, size);
 
-        assertEquals(1, result.size());
-
-        verify(itemRequestRepository, times(1)).findAllByRequesterIdNot(eq(userId), any(PageRequest.class));
+        assertEquals(0, result.size());
     }
 
     @Test

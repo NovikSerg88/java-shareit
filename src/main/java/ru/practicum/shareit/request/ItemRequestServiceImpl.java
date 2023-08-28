@@ -38,10 +38,22 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        return itemRequestRepository.findAllByRequesterId(userId)
+        List<ItemRequestResponseDto> itemRequestResponseDtos = itemRequestRepository.findAllByRequesterId(userId)
                 .stream()
-                .map(this::mapItemRequestToDto)
+                .map(requestMapper::toResponseDto)
                 .collect(Collectors.toList());
+
+        List<Item> items = itemRepository.findAll();
+
+        itemRequestResponseDtos.forEach(dto -> {
+            List<ItemResponseDto> itemResponseDtos = items.stream()
+                    .filter(item -> item.getRequest() != null && item.getRequest().getId().equals(dto.getId()))
+                    .map(item -> requestMapper.mapToItemResponse(item, dto.getId()))
+                    .collect(Collectors.toList());
+            dto.setItems(itemResponseDtos);
+        });
+
+        return itemRequestResponseDtos;
     }
 
     @Override
@@ -49,11 +61,22 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
         Page<ItemRequest> requests = itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest);
 
+        List<Item> items = itemRepository.findAll();
+
         return requests.stream()
-                .map(this::mapItemRequestToDto)
+                .map(request -> {
+                    ItemRequestResponseDto dto = requestMapper.toResponseDto(request);
+
+                    List<ItemResponseDto> itemResponseDtos = items.stream()
+                            .filter(item -> item.getRequest() != null && item.getRequest().getId().equals(request.getId()))
+                            .map(item -> requestMapper.mapToItemResponse(item, request.getId()))
+                            .collect(Collectors.toList());
+
+                    dto.setItems(itemResponseDtos);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
-
 
     @Override
     public ItemRequestResponseDto getRequestById(Long requestId, Long userId) {
@@ -68,19 +91,5 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         ItemRequestResponseDto itemRequestResponseDto = requestMapper.toResponseDto(itemRequest);
         itemRequestResponseDto.setItems(itemResponseDtos);
         return itemRequestResponseDto;
-    }
-
-    private ItemRequestResponseDto mapItemRequestToDto(ItemRequest itemRequest) {
-        List<ItemResponseDto> items = itemRepository.findAllByRequestId(itemRequest.getId())
-                .stream()
-                .map(item -> requestMapper.mapToItemResponse(item, itemRequest.getId()))
-                .collect(Collectors.toList());
-
-        return ItemRequestResponseDto.builder()
-                .id(itemRequest.getId())
-                .description(itemRequest.getDescription())
-                .created(itemRequest.getCreated())
-                .items(items)
-                .build();
     }
 }
