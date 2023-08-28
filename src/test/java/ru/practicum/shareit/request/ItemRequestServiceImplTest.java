@@ -188,4 +188,93 @@ public class ItemRequestServiceImplTest {
 
         verify(itemRequestRepository, never()).save(any(ItemRequest.class));
     }
+
+    @Test
+    public void getAllUserRequestsWithEmptyItemsAndReturn() {
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(Collections.singletonList(itemRequest));
+
+        List<Item> items = Collections.singletonList(item);
+        when(itemRepository.findAll()).thenReturn(items);
+
+        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
+
+        List<ItemRequestResponseDto> result = itemRequestService.getAllUserRequests(userId);
+
+        assertEquals(1, result.size());
+        assertNotNull(result.get(0).getItems());
+    }
+
+    @Test
+    public void testGetAllUserRequests_NoRequests() {
+        User testUser = new User();
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(Collections.emptyList());
+
+        List<ItemRequestResponseDto> result = itemRequestService.getAllUserRequests(userId);
+
+        assertTrue(result.isEmpty());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(itemRequestRepository, times(1)).findAllByRequesterId(userId);
+    }
+
+    @Test
+    public void testGetAllUserRequests_ItemsAssociatedWithRequests() {
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(Collections.singletonList(itemRequest));
+        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
+        when(itemRepository.findAll()).thenReturn(Collections.singletonList(item));
+
+        List<ItemRequestResponseDto> result = itemRequestService.getAllUserRequests(userId);
+
+        assertFalse(result.isEmpty());
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(itemRequestRepository, times(1)).findAllByRequesterId(userId);
+        verify(requestMapper, times(1)).toResponseDto(itemRequest);
+        verify(itemRepository, times(1)).findAll();
+    }
+
+    @Test
+    public void testGetAllRequests_NoRequests() {
+        Long userId = 1L;
+        int from = 0;
+        int size = 10;
+
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
+        Page<ItemRequest> emptyPage = Page.empty(pageRequest);
+
+        when(itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest)).thenReturn(emptyPage);
+
+        List<ItemRequestResponseDto> result = itemRequestService.getAllRequests(userId, from, size);
+
+        assertTrue(result.isEmpty());
+
+        verify(itemRequestRepository, times(1)).findAllByRequesterIdNot(userId, pageRequest);
+    }
+
+    @Test
+    public void testGetAllRequests_WithRequests() {
+        Long userId = 1L;
+        int from = 0;
+        int size = 10;
+
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
+
+        Page<ItemRequest> pageWithRequest = new PageImpl<>(Collections.singletonList(itemRequest), pageRequest, 1);
+
+        when(itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest)).thenReturn(pageWithRequest);
+        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
+
+        List<ItemRequestResponseDto> result = itemRequestService.getAllRequests(userId, from, size);
+
+        assertFalse(result.isEmpty());
+
+        verify(itemRequestRepository, times(1)).findAllByRequesterIdNot(userId, pageRequest);
+        verify(requestMapper, times(1)).toResponseDto(itemRequest);
+    }
 }
