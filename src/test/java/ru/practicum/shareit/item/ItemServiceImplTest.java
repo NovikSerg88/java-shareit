@@ -28,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import static ru.practicum.shareit.booking.model.Status.APPROVED;
+import static ru.practicum.shareit.booking.model.Status.WAITING;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceImplTest {
@@ -480,6 +482,116 @@ public class ItemServiceImplTest {
         assertEquals(mockItems.size(), result.size());
         verify(commentService, times(1)).getItemIdToComments(anySet());
         verify(itemMapper, times(mockItems.size())).mapToDto(any(Item.class));
+    }
+
+    @Test
+    void setBookings_WithDifferentBookingStatuses() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> bookings = new ArrayList<>();
+        Booking booking1 = new Booking(1L, now.minusHours(2), now, item, user, Status.WAITING);
+        Booking booking2 = new Booking(2L, now.plusHours(1), now, item, user, Status.APPROVED);
+        Booking booking3 = new Booking(3L, now.plusHours(3), now, item, user, Status.APPROVED);
+        bookings.add(booking1);
+        bookings.add(booking2);
+        bookings.add(booking3);
+        item.setBookings(bookings);
+
+        ItemDto expectedDto = itemDto;
+        BookingResponseDto nextBookingDto = BookingResponseDto.builder()
+                .id(booking2.getId())
+                .bookerId(booking2.getBooker().getId())
+                .build();
+        BookingResponseDto lastBookingDto = BookingResponseDto.builder()
+                .id(booking3.getId())
+                .bookerId(booking3.getBooker().getId())
+                .build();
+        expectedDto.setNextBooking(nextBookingDto);
+        expectedDto.setLastBooking(lastBookingDto);
+
+        ItemDto resultDto = new ItemDto(1L, 1L, "item", "description", true, 1L, lastBookingDto, nextBookingDto, null);
+
+        setBookings(resultDto, item, user.getId());
+
+        assertEquals(expectedDto.getNextBooking(), resultDto.getNextBooking());
+        assertEquals(expectedDto.getLastBooking(), resultDto.getLastBooking());
+    }
+
+    @Test
+    void saveItem_WithExistingRequest() {
+        Long userId = 1L;
+        Long requestId = 2L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(itemRequestRepository.findById(requestId)).thenReturn(Optional.of(itemRequest));
+
+        itemDto.setRequestId(requestId);
+
+        Item mappedItem = item;
+        when(itemMapper.mapToItem(itemDto, user, itemRequest)).thenReturn(mappedItem);
+
+        Item savedItem = item;
+        when(itemRepository.save(mappedItem)).thenReturn(savedItem);
+
+        when(itemMapper.mapToDto(savedItem)).thenReturn(itemDto);
+
+        ItemDto result = itemServiceImpl.saveItem(itemDto, userId);
+
+        assertEquals(itemDto, result);
+        verify(userRepository).findById(userId);
+        verify(itemRequestRepository).findById(requestId);
+        verify(itemMapper).mapToItem(itemDto, user, itemRequest);
+        verify(itemRepository).save(mappedItem);
+        verify(itemMapper).mapToDto(savedItem);
+    }
+
+    @Test
+    void saveItem_WithoutRequest() {
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        itemDto.setRequestId(null);
+
+        Item mappedItem = item;
+        when(itemMapper.mapToItem(itemDto, user, null)).thenReturn(mappedItem);
+
+        Item savedItem = item;
+        when(itemRepository.save(mappedItem)).thenReturn(savedItem);
+
+        when(itemMapper.mapToDto(savedItem)).thenReturn(itemDto);
+
+        ItemDto result = itemServiceImpl.saveItem(itemDto, userId);
+
+        assertEquals(itemDto, result);
+        verify(userRepository).findById(userId);
+        verify(itemMapper).mapToItem(itemDto, user, null);
+        verify(itemRepository).save(mappedItem);
+        verify(itemMapper).mapToDto(savedItem);
+    }
+
+    private void setBookings(ItemDto dto, Item item, Long userId) {
+        if (userId.equals(dto.getOwnerId())) {
+            LocalDateTime now = LocalDateTime.now();
+            List<Booking> bookings = item.getBookings();
+            bookings.stream()
+                    .filter(b -> b.getStart().isAfter(now)
+                            && (WAITING.equals(b.getStatus())
+                            || APPROVED.equals(b.getStatus())))
+                    .min(Comparator.comparing(Booking::getStart))
+                    .ifPresent(b -> dto.setNextBooking(BookingResponseDto.builder()
+                            .id(b.getId())
+                            .bookerId(b.getBooker().getId())
+                            .build()));
+
+            bookings.stream()
+                    .filter(b -> (b.getEnd().isBefore(now) || (b.getEnd().isAfter(now) && b.getStart().isBefore(now)))
+                            && APPROVED.equals(b.getStatus()))
+                    .max(Comparator.comparing(Booking::getStart))
+                    .ifPresent(b -> dto.setLastBooking(BookingResponseDto.builder()
+                            .id(b.getId())
+                            .bookerId(b.getBooker().getId())
+                            .build()));
+        }
     }
 }
 
