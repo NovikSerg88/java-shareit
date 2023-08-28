@@ -58,6 +58,7 @@ public class ItemServiceImplTest {
     private Booking booking;
     private LocalDateTime current;
     private List<Booking> bookings;
+    private CommentResponse commentResponse;
 
     @BeforeEach
     void setUp() {
@@ -70,6 +71,7 @@ public class ItemServiceImplTest {
         itemDto = new ItemDto(1L, userDto.getId(), "item", "description",
                 true, 1L, null, null, null);
         booking = new Booking(1L, current, current.plusHours(1), item, user, Status.WAITING);
+        commentResponse = new CommentResponse(1L, "comment", user.getName(), current);
     }
 
     @Test
@@ -411,6 +413,73 @@ public class ItemServiceImplTest {
         verify(itemRepository).findById(itemId);
         verify(userRepository).getReferenceById(ownerId);
         verifyNoMoreInteractions(itemRepository, userRepository);
+    }
+
+    @Test
+    public void testGetItemsForUser() {
+        Long userId = 1L;
+        int from = 0;
+        int size = 10;
+
+
+        List<Item> mockItems = new ArrayList<>();
+        when(itemRepository.findAllByOwnerIdFetchBookings(eq(userId), any(PageRequest.class)))
+                .thenReturn(mockItems);
+
+
+        Map<Long, List<CommentResponse>> itemIdToComments = new HashMap<>();
+        when(commentService.getItemIdToComments(anySet())).thenReturn(itemIdToComments);
+
+        List<ItemDto> result = itemServiceImpl.getItemsForUser(userId, from, size);
+
+        assertNotNull(result);
+        assertEquals(mockItems.size(), result.size());
+    }
+
+    @Test
+    public void testGetItemsForUserNoComments() {
+        Long userId = 1L;
+        int from = 0;
+        int size = 10;
+
+        List<Item> mockItems = new ArrayList<>();
+        when(itemRepository.findAllByOwnerIdFetchBookings(eq(userId), any(PageRequest.class)))
+                .thenReturn(mockItems);
+
+        Map<Long, List<CommentResponse>> itemIdToComments = new HashMap<>();
+        when(commentService.getItemIdToComments(anySet())).thenReturn(itemIdToComments);
+
+        List<ItemDto> result = itemServiceImpl.getItemsForUser(userId, from, size);
+
+        assertNotNull(result);
+        assertEquals(mockItems.size(), result.size());
+        verify(commentService, times(1)).getItemIdToComments(anySet());
+        verify(itemMapper, times(mockItems.size())).mapToDto(any(Item.class));
+        assertTrue(result.stream().allMatch(itemDto -> itemDto.getComments().isEmpty()));
+    }
+
+    @Test
+    public void testGetItemsForUserWithComments() {
+        Long userId = 1L;
+        int from = 0;
+        int size = 10;
+
+        List<Item> mockItems = new ArrayList<>();
+        when(itemRepository.findAllByOwnerIdFetchBookings(eq(userId), any(PageRequest.class)))
+                .thenReturn(mockItems);
+
+        Map<Long, List<CommentResponse>> itemIdToComments = new HashMap<>();
+        List<CommentResponse> commentResponses = new ArrayList<>();
+        commentResponses.add(commentResponse);
+        itemIdToComments.put(1L, commentResponses);
+        when(commentService.getItemIdToComments(anySet())).thenReturn(itemIdToComments);
+
+        List<ItemDto> result = itemServiceImpl.getItemsForUser(userId, from, size);
+
+        assertNotNull(result);
+        assertEquals(mockItems.size(), result.size());
+        verify(commentService, times(1)).getItemIdToComments(anySet());
+        verify(itemMapper, times(mockItems.size())).mapToDto(any(Item.class));
     }
 }
 
