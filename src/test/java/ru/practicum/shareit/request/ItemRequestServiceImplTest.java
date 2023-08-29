@@ -125,7 +125,7 @@ public class ItemRequestServiceImplTest {
     }
 
     @Test
-    public void getAllRequestsAndReturn() {
+    public void getAllRequestsAndReturnEmpty() {
         int from = 0;
         int size = 10;
         PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
@@ -207,7 +207,7 @@ public class ItemRequestServiceImplTest {
     }
 
     @Test
-    public void testGetAllUserRequests_NoRequests() {
+    public void getAllUserRequestsWithNoRequestsAndReturnEmpty() {
         User testUser = new User();
         Long userId = 1L;
 
@@ -223,7 +223,7 @@ public class ItemRequestServiceImplTest {
     }
 
     @Test
-    public void testGetAllUserRequests_ItemsAssociatedWithRequests() {
+    public void getAllUserRequestsWithItemsAssociatedWithRequests() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(Collections.singletonList(itemRequest));
         when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
@@ -240,41 +240,93 @@ public class ItemRequestServiceImplTest {
     }
 
     @Test
-    public void testGetAllRequests_NoRequests() {
+    void getAllUserRequestsAndReturnWithItems() {
         Long userId = 1L;
         int from = 0;
         int size = 10;
 
-        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
-        Page<ItemRequest> emptyPage = Page.empty(pageRequest);
+        ItemRequest request1 = new ItemRequest(1L, "description1", user, LocalDateTime.now());
+        List<ItemRequest> mockRequests = List.of(request1);
 
-        when(itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest)).thenReturn(emptyPage);
+        Item item1 = new Item(1L, user, "name1", "description1", true, request1, null);
+        List<Item> mockItems = List.of(item1);
+
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
+        Page<ItemRequest> mockPage = new PageImpl<>(mockRequests, pageRequest, mockRequests.size());
+
+        when(itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest)).thenReturn(mockPage);
+        when(itemRepository.findAll()).thenReturn(mockItems);
+
+        ItemRequestResponseDto responseDto = new ItemRequestResponseDto(1L, "description1", LocalDateTime.now(), items);
+        List<ItemRequestResponseDto> expected = new ArrayList<>();
+        for (ItemRequest request : mockPage) {
+            when(requestMapper.toResponseDto(request)).thenReturn(responseDto);
+            ItemRequestResponseDto dto = requestMapper.toResponseDto(request);
+            List<ItemResponseDto> itemResponseDtos = new ArrayList<>();
+            for (Item item : mockItems) {
+                if (item.getRequest() != null && item.getRequest().getId().equals(request.getId())) {
+                    when(requestMapper.mapToItemResponse(item, request.getId())).thenReturn(itemResponseDto);
+                    itemResponseDtos.add(itemResponseDto);
+                }
+            }
+            dto.setItems(itemResponseDtos);
+            expected.add(dto);
+        }
 
         List<ItemRequestResponseDto> result = itemRequestService.getAllRequests(userId, from, size);
 
-        assertTrue(result.isEmpty());
+        assertEquals(1, result.size());
+        assertEquals(expected, result);
 
         verify(itemRequestRepository, times(1)).findAllByRequesterIdNot(userId, pageRequest);
+        verify(itemRepository, times(1)).findAll();
     }
 
     @Test
-    public void testGetAllRequests_WithRequests() {
+    void getAllRequestsAndReturnWithItems() {
         Long userId = 1L;
-        int from = 0;
-        int size = 10;
 
-        PageRequest pageRequest = PageRequest.of(from, size, Sort.by(Sort.Direction.DESC, "created"));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        Page<ItemRequest> pageWithRequest = new PageImpl<>(Collections.singletonList(itemRequest), pageRequest, 1);
+        ItemRequest request1 = new ItemRequest(1L, "description1", user, LocalDateTime.now());
 
-        when(itemRequestRepository.findAllByRequesterIdNot(userId, pageRequest)).thenReturn(pageWithRequest);
-        when(requestMapper.toResponseDto(itemRequest)).thenReturn(itemRequestResponseDto);
+        List<ItemRequest> mockRequests = List.of(request1);
 
-        List<ItemRequestResponseDto> result = itemRequestService.getAllRequests(userId, from, size);
+        ItemRequestResponseDto responseDto = new ItemRequestResponseDto(1L, "description1", LocalDateTime.now(), items);
+        List<ItemRequestResponseDto> mockResponseDtos = new ArrayList<>();
 
-        assertFalse(result.isEmpty());
+        when(itemRequestRepository.findAllByRequesterId(userId)).thenReturn(mockRequests);
 
-        verify(itemRequestRepository, times(1)).findAllByRequesterIdNot(userId, pageRequest);
-        verify(requestMapper, times(1)).toResponseDto(itemRequest);
+        for (ItemRequest request : mockRequests) {
+            when(requestMapper.toResponseDto(request)).thenReturn(responseDto);
+            mockResponseDtos.add(responseDto);
+        }
+
+        Item item1 = new Item(1L, user, "name1", "description1", true, request1, null);
+        List<Item> mockItems = List.of(item1);
+
+        when(itemRepository.findAll()).thenReturn(mockItems);
+
+        List<ItemResponseDto> itemResponseDtos = new ArrayList<>();
+        List<ItemRequestResponseDto> expected = new ArrayList<>();
+
+        for (ItemRequestResponseDto dto : mockResponseDtos) {
+            for (Item item : mockItems) {
+                if (item.getRequest() != null && item.getRequest().getId().equals(dto.getId())) {
+                    when(requestMapper.mapToItemResponse(item, dto.getId())).thenReturn(itemResponseDto);
+                    itemResponseDtos.add(itemResponseDto);
+                }
+            }
+            dto.setItems(itemResponseDtos);
+            expected.add(dto);
+        }
+
+        List<ItemRequestResponseDto> result = itemRequestService.getAllUserRequests(userId);
+
+        assertEquals(1, expected.size());
+        assertEquals(expected, result);
+
+        verify(itemRequestRepository, times(1)).findAllByRequesterId(userId);
+        verify(itemRepository, times(1)).findAll();
     }
 }
