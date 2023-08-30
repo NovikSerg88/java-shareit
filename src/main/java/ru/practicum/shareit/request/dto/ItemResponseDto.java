@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.NotEmpty;
-
 @Data
 @Builder
 @AllArgsConstructor
-public final class ItemRequestDto {
-    @NotEmpty
+public final class ItemResponseDto {
+    private Long id;
+    private String name;
     private String description;
-    private Long requesterId;
+    private boolean available;
+    private Long requestId;
 }

@@ -3,6 +3,8 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
@@ -20,6 +22,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,11 +45,12 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found"));
         Booking booking = bookingMapper.mapToBooking(bookingRequestDto, item, booker);
-        if (booking.getItem().getAvailable().equals(false)) {
+        if (booking.getItem() == null || booking.getItem().getAvailable() == null || !booking.getItem().getAvailable()) {
             throw new ValidationException("Item is not available");
         }
-        if (booking.getBooker().getId().equals(booking.getItem().getOwner().getId())) {
-            throw new NotFoundException("Owner cant book this item");
+
+        if (booking.getBooker() == null || booking.getBooker().getId().equals(booking.getItem().getOwner().getId())) {
+            throw new NotFoundException("Owner can't book this item");
         }
         return bookingMapper.mapToBookingResponseDto(bookingRepository.save(booking));
     }
@@ -55,7 +59,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponseDto update(Long bookingId, Long ownerId, Boolean approved) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking with ID=" + bookingId + " not found"));
-        if (!booking.getItem().getOwner().getId().equals(ownerId)) {
+        if (ownerId == null || !ownerId.equals(booking.getItem().getOwner().getId())) {
             throw new NotFoundException("Status of booking cannot be updated because " +
                     "user is not the owner of item.");
         }
@@ -79,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Booking with ID=" + bookingId + " not found"));
         Long bookerId = booking.getBooker().getId();
         Long ownerId = booking.getItem().getOwner().getId();
-        if (userId.equals(bookerId) || userId.equals(ownerId)) {
+        if (userId != null && (userId.equals(bookerId) || userId.equals(ownerId))) {
             return bookingMapper.mapToBookingResponseDto(booking);
         } else {
             throw new NotFoundException("Only owner or booker of a Booking can request data about it");
@@ -87,31 +91,34 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getBookingsOfUser(String stringState, Long userId) {
+    public List<BookingResponseDto> getBookingsOfUser(Long userId, String stringState, Integer from, Integer size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        List<Booking> bookings;
-        LocalDateTime now = LocalDateTime.now();
-        Sort sortByStartDesc = Sort.by(Sort.Direction.DESC, "start");
+        if (from < 0) {
+            throw new ValidationException("Page cant be less then null");
+        }
+        PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
+        Page<Booking> bookings;
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         State state = getState(stringState);
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findByBookerId(userId, sortByStartDesc);
+                bookings = bookingRepository.findByBookerId(userId, pageRequest);
                 break;
             case CURRENT:
-                bookings = bookingRepository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, sortByStartDesc);
+                bookings = bookingRepository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, pageRequest);
                 break;
             case PAST:
-                bookings = bookingRepository.findByBookerIdAndEndIsBefore(userId, now, sortByStartDesc);
+                bookings = bookingRepository.findByBookerIdAndEndIsBefore(userId, now, pageRequest);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findByBookerIdAndStartIsAfter(userId, now, sortByStartDesc);
+                bookings = bookingRepository.findByBookerIdAndStartIsAfter(userId, now, pageRequest);
                 break;
             case WAITING:
-                bookings = bookingRepository.findByBookerIdAndStatus(userId, Status.WAITING, sortByStartDesc);
+                bookings = bookingRepository.findByBookerIdAndStatus(userId, Status.WAITING, pageRequest);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findByBookerIdAndStatus(userId, Status.REJECTED, sortByStartDesc);
+                bookings = bookingRepository.findByBookerIdAndStatus(userId, Status.REJECTED, pageRequest);
                 break;
             default:
                 throw new ValidationException("Unknown state: " + state);
@@ -122,33 +129,36 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getBookingsOfOwner(String stringState, Long userId) {
+    public List<BookingResponseDto> getBookingsOfOwner(Long userId, String stringState, int from, int size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        List<Booking> bookings;
-        LocalDateTime now = LocalDateTime.now();
+        if (from < 0) {
+            throw new ValidationException("Page cant be less then null");
+        }
+        PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
+        Page<Booking> bookings;
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         State state = getState(stringState);
-        Sort sortByStartDesc = Sort.by(Sort.Direction.DESC, "start");
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findByItem_Owner_Id(userId, sortByStartDesc);
+                bookings = bookingRepository.findByItem_Owner_Id(userId, pageRequest);
                 break;
             case CURRENT:
                 bookings = bookingRepository.findByItem_Owner_IdAndStartIsBeforeAndEndIsAfter(userId, now,
-                        now, sortByStartDesc);
+                        now, pageRequest);
                 break;
             case PAST:
-                bookings = bookingRepository.findByItem_Owner_IdAndEndIsBefore(userId, now, sortByStartDesc);
+                bookings = bookingRepository.findByItem_Owner_IdAndEndIsBefore(userId, now, pageRequest);
                 break;
             case FUTURE:
                 bookings = bookingRepository.findByItem_Owner_IdAndStartIsAfter(userId, now,
-                        sortByStartDesc);
+                        pageRequest);
                 break;
             case WAITING:
-                bookings = bookingRepository.findByItem_Owner_IdAndStatus(userId, Status.WAITING, sortByStartDesc);
+                bookings = bookingRepository.findByItem_Owner_IdAndStatus(userId, Status.WAITING, pageRequest);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findByItem_Owner_IdAndStatus(userId, Status.REJECTED, sortByStartDesc);
+                bookings = bookingRepository.findByItem_Owner_IdAndStatus(userId, Status.REJECTED, pageRequest);
                 break;
             default:
                 throw new ValidationException("Unknown state: " + state);

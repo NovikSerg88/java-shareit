@@ -8,6 +8,8 @@ import ru.practicum.shareit.item.dto.CommentResponse;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 
@@ -46,15 +48,19 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getItemsForUser(@RequestHeader(USER_HEADER) Long userId) {
+    public List<ItemDto> getItemsForUser(@RequestHeader(USER_HEADER) Long userId,
+                                         @RequestParam(value = "from", required = false, defaultValue = "0") @Min(0) int from,
+                                         @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) int size) {
         log.info("Received request to GET items for user with id={}", userId);
-        return itemService.getItemsForUser(userId);
+        return itemService.getItemsForUser(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam("text") String query) {
+    public List<ItemDto> searchItems(@RequestParam("text") String query,
+                                     @RequestParam(value = "from", required = false, defaultValue = "0") @Min(0) int from,
+                                     @RequestParam(value = "size", required = false, defaultValue = "10") @Min(1) @Max(100) int size) {
         log.info("Received GET request to search for items by query = {}", query);
-        return itemService.searchAvailableItems(query);
+        return itemService.searchAvailableItems(query, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
