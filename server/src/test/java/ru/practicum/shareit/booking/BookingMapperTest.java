@@ -1,5 +1,6 @@
-package shareit.booking;
+package ru.practicum.shareit.booking;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.booking.dto.BookerResponseDto;
@@ -70,7 +71,7 @@ public class BookingMapperTest {
         assertEquals(booking.getId(), responseDto.getId());
         assertEquals(booking.getStart(), responseDto.getStart());
         assertEquals(booking.getEnd(), responseDto.getEnd());
-        assertEquals(booking.getStatus(), responseDto.getStatus());
+        Assertions.assertEquals(booking.getStatus(), responseDto.getStatus());
         assertEquals(booking.getItem().getId(), responseDto.getItem().getId());
         assertEquals(booking.getItem().getName(), responseDto.getItem().getName());
         assertEquals(booking.getBooker().getId(), responseDto.getBooker().getId());

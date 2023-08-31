@@ -1,6 +1,7 @@
-package shareit.booking;
+package ru.practicum.shareit.booking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.practicum.shareit.booking.controller.BookingController;
 import ru.practicum.shareit.booking.dto.BookerResponseDto;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
@@ -72,7 +74,7 @@ public class BookingControllerTest {
                         is(bookingResponseDto.getStart().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
                 .andExpect(jsonPath("$.end",
                         is(bookingResponseDto.getEnd().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
-                .andExpect(jsonPath("$.status", is(bookingResponseDto.getStatus().toString())));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status", Matchers.is(bookingResponseDto.getStatus().toString())));
     }
 
     @Test
@@ -93,7 +95,7 @@ public class BookingControllerTest {
                         is(bookingResponseDto.getStart().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
                 .andExpect(jsonPath("$.end",
                         is(bookingResponseDto.getEnd().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
-                .andExpect(jsonPath("$.status", is(bookingResponseDto.getStatus().toString()), Status.class));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status", Matchers.is(bookingResponseDto.getStatus().toString()), Status.class));
     }
 
     @Test
@@ -118,7 +120,7 @@ public class BookingControllerTest {
                         .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
                 .andExpect(jsonPath("$.[0].item.id", is(bookingResponseDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.[0].booker.id", is(bookingResponseDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$.[0].status", is(bookingResponseDto.getStatus().toString())));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.[0].status", Matchers.is(bookingResponseDto.getStatus().toString())));
     }
 
     @Test
@@ -142,7 +144,7 @@ public class BookingControllerTest {
                         .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
                 .andExpect(jsonPath("$.[0].item.id", is(bookingResponseDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.[0].booker.id", is(bookingResponseDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$.[0].status", is(bookingResponseDto.getStatus().toString())));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.[0].status", Matchers.is(bookingResponseDto.getStatus().toString())));
     }
 
     @Test
@@ -162,25 +164,7 @@ public class BookingControllerTest {
                         is(bookingResponseDto.getStart().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
                 .andExpect(jsonPath("$.end",
                         is(bookingResponseDto.getEnd().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))))
-                .andExpect(jsonPath("$.status", is(bookingResponseDto.getStatus().toString())));
-    }
-
-    @Test
-    public void testIsEndAfterStartValidation() throws Exception {
-        BookingRequestDto invalidRequest = new BookingRequestDto(
-                1L,
-                LocalDateTime.of(2030, 12, 25, 12, 0, 0),
-                LocalDateTime.of(2030, 12, 24, 12, 0, 0));
-
-        when(bookingService.create(any(), any(Long.class)))
-                .thenReturn(bookingResponseDto);
-        mvc.perform(post("/bookings")
-                        .content(mapper.writeValueAsString(invalidRequest))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .header(USER_HEADER, 1))
-                .andExpect(status().is4xxClientError());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status", Matchers.is(bookingResponseDto.getStatus().toString())));
     }
 }
 

@@ -9,8 +9,8 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 
 @Validated
 @Slf4j
@@ -54,16 +54,16 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getItemsForUser(@RequestHeader(value = "X-Sharer-User-Id") Long userId,
-                                                  @RequestParam(value = "from", defaultValue = "0", required = false) @Min(0) int from,
-                                                  @RequestParam(value = "size", defaultValue = "10", required = false) @Min(1) @Max(100) int size) {
+                                                  @RequestParam(value = "from", defaultValue = "0", required = false) @PositiveOrZero int from,
+                                                  @RequestParam(value = "size", defaultValue = "10", required = false) @Positive int size) {
         log.info("Received request to GET items for user with id={}", userId);
         return itemClient.getItemsForUser(userId, from, size);
     }
 
     @GetMapping("/search")
     public ResponseEntity<Object> searchItems(@RequestParam("text") String query,
-                                              @RequestParam(value = "from", defaultValue = "0", required = false) @Min(0) int from,
-                                              @RequestParam(value = "size", defaultValue = "10", required = false) @Min(1) @Max(100) int size) {
+                                              @RequestParam(value = "from", defaultValue = "0", required = false) @PositiveOrZero int from,
+                                              @RequestParam(value = "size", defaultValue = "10", required = false) @Positive int size) {
         log.info("Received GET request to search for items by query = {}", query);
         return itemClient.searchItems(query, from, size);
     }

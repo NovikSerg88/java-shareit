@@ -8,10 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.*;
 
 @Validated
 @Slf4j
@@ -38,8 +35,8 @@ public class RequestController {
 
     @GetMapping("/all")
     public ResponseEntity<Object> getAllRequests(@RequestHeader(value = USER_HEADER) @NotNull Long userId,
-                                                 @RequestParam(value = "from", defaultValue = "0", required = false) @Min(0) int from,
-                                                 @RequestParam(value = "size", defaultValue = "10", required = false) @Min(1) @Max(100) int size) {
+                                                 @RequestParam(value = "from", defaultValue = "0", required = false) @PositiveOrZero int from,
+                                                 @RequestParam(value = "size", defaultValue = "10", required = false) @Positive int size) {
         log.info("Received request to GET all ItemRequests not belonging to user with id={}", userId);
         return requestClient.getAllRequests(userId, from, size);
     }

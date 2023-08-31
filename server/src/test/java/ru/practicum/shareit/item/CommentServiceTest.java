@@ -1,4 +1,4 @@
-package shareit.item;
+package ru.practicum.shareit.item;
 
 import org.assertj.core.api.Java6Assertions;
 import org.junit.jupiter.api.BeforeEach;

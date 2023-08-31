@@ -3,12 +3,10 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.UserAlreadyExistsException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,26 +36,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto update(Map<String, Object> updates, Long userId) {
+    public UserDto update(UserDto dto, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User with ID = %d not found", userId)));
-        List<UserDto> users = userRepository.findAll().stream()
-                .map(userMapper::toUserDto)
-                .collect(Collectors.toList());
-        if (updates != null) {
-            if (updates.containsKey("name")) {
-                String newName = (String) updates.get("name");
-                user.setName(newName);
-            }
-            if (updates.containsKey("email")) {
-                String newEmail = (String) updates.get("email");
-                if (users.stream().anyMatch(u -> newEmail.equals(u.getEmail()) && !user.getId().equals(u.getId()))) {
-                    throw new UserAlreadyExistsException(String.format("User with ID = %d already exists", userId));
-                }
-                user.setEmail(newEmail);
-            }
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
         }
-        return userMapper.toUserDto(userRepository.save(user));
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
+        UserDto userDto = userMapper.toUserDto(user);
+        userRepository.save(user);
+        return userDto;
     }
 
     @Override

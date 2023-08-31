@@ -1,4 +1,4 @@
-package shareit.user;
+package ru.practicum.shareit.user;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +14,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -32,13 +31,11 @@ public class UserServiceImplTest {
     private UserServiceImpl userService;
     private UserDto userDto;
     private User user;
-    private Map<String, Object> updates;
 
     @BeforeEach
     void setUp() {
         userDto = new UserDto(1L, "user", "user@user.ru");
         user = new User(1L, "user", "user@user.ru");
-        updates = new HashMap<>();
     }
 
     public static User fromDto(UserDto dto) {
@@ -76,42 +73,56 @@ public class UserServiceImplTest {
     void updateWhenUserNotPresentThrows() {
         when(userRepository.findById(userDto.getId())).thenReturn(Optional.empty());
         final NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> userService.update(updates, userDto.getId()));
+                () -> userService.update(userDto, userDto.getId()));
         assertEquals("User with ID = 1 not found", exception.getMessage());
     }
 
     @Test
     void updateByNameAndReturn() {
-        Long userId = 1L;
-        String newName = "New Name";
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userRepository.save(user)).thenReturn(user);
+        UserDto dto = new UserDto(1L, "newName", "newUser@user.ru");
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
+        when(userMapper.toUserDto(user)).thenReturn(dto);
+        UserDto resultDto = userService.update(dto, 1L);
+        assertEquals(user.getName(), resultDto.getName());
+    }
 
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("name", newName);
-
-        userService.update(updates, userId);
-
-        verify(userRepository, times(1)).findById(userId);
-        verify(userRepository, times(1)).save(user);
-        verify(userMapper, times(1)).toUserDto(user);
+    @Test
+    void updateByNameAndIfNameIsNull() {
+        UserDto dto = new UserDto(1L, null, "newUser@user.ru");
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
+        when(userMapper.toUserDto(user)).thenReturn(dto);
+        UserDto resultDto = userService.update(dto, 1L);
+        assertNotEquals(user.getName(), resultDto.getName());
     }
 
     @Test
     void updateByEmailAndReturn() {
-        Long userId = 1L;
-        String newEmail = "newEmail@user.ru";
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userRepository.save(user)).thenReturn(user);
+        UserDto dto = new UserDto(1L, "newName", "newUser@user.ru");
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
+        when(userMapper.toUserDto(user)).thenReturn(dto);
+        UserDto resultDto = userService.update(dto, 1L);
+        assertEquals(user.getEmail(), resultDto.getEmail());
+    }
 
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("email", newEmail);
-
-        userService.update(updates, userId);
-
-        verify(userRepository, times(1)).findById(userId);
-        verify(userRepository, times(1)).save(user);
-        verify(userMapper, times(1)).toUserDto(user);
+    @Test
+    void updateByNameAndIfEmailIsNull() {
+        UserDto dto = new UserDto(1L, "newName", null);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
+        when(userMapper.toUserDto(user)).thenReturn(dto);
+        UserDto resultDto = userService.update(dto, 1L);
+        assertNotEquals(user.getEmail(), resultDto.getEmail());
     }
 
     @Test
@@ -123,11 +134,11 @@ public class UserServiceImplTest {
         existingUser.setEmail(existingEmail);
 
         List<User> userList = List.of(existingUser);
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("email", existingEmail);
-        String newEmail = (String) updates.get("email");
+
+        userDto.setEmail(existingEmail);
+        String newEmail = userDto.getEmail();
         if (userList.stream().anyMatch(u -> u.getEmail().equals(newEmail) && !u.getId().equals(user.getId()))) {
-            assertThrows(UserAlreadyExistsException.class, () -> userService.update(updates, userId));
+            assertThrows(UserAlreadyExistsException.class, () -> userService.update(userDto, userId));
         }
     }
 
