@@ -10,7 +10,7 @@ services:
       - server
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
-      - TZ=Europe/Moscow
+#      - TZ=Asia/Vladivostok
 
   server:
     build: server
@@ -23,7 +23,7 @@ services:
     restart: on-failure
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
-      - TZ=Europe/Moscow
+#      - TZ=Asia/Vladivostok
 
   db:
     image: postgres:13.7
@@ -34,5 +34,6 @@ services:
       - POSTGRES_DB=shareit
       - POSTGRES_USER=shareit
       - POSTGRES_PASSWORD=shareit
+#      - TZ=Asia/Vladivostok
     volumes:
         - ./postgres:/data/postgres
