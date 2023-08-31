@@ -10,6 +10,7 @@ services:
       - server
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
+      - TZ=Europe/Moscow
 
   server:
     build: server
@@ -18,24 +19,20 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - db
+    restart: on-failure
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
+      - TZ=Europe/Moscow
 
-  postgres:
-    image: postgres:15.3
+  db:
+    image: postgres:13.7
+    container_name: postgresql
     ports:
-      - "5432:5432"
+      - "6541:5432"
     environment:
-      POSTGRES_USER: "shareit"
-      POSTGRES_PASSWORD: "shareit"
-      POSTGRES_DB: "shareit"
-      PGDATA: /data/postgres
+      - POSTGRES_DB=shareit
+      - POSTGRES_USER=shareit
+      - POSTGRES_PASSWORD=shareit
     volumes:
         - ./postgres:/data/postgres
-    healthcheck:
-        test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-        interval: 10s
-        timeout: 5s
-        retries: 5
