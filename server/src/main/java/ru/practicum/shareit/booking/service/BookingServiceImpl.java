@@ -90,16 +90,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getBookingsOfUser(Long userId, String stringState, Integer from, Integer size) {
+    public List<BookingResponseDto> getBookingsOfUser(Long userId, State state, Integer from, Integer size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        if (from < 0) {
-            throw new ValidationException("Page cant be less then null");
-        }
         PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
-        Page<Booking> bookings;
+        Page<Booking> bookings = null;
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        State state = getState(stringState);
         switch (state) {
             case ALL:
                 bookings = bookingRepository.findByBookerId(userId, pageRequest);
@@ -119,8 +115,6 @@ public class BookingServiceImpl implements BookingService {
             case REJECTED:
                 bookings = bookingRepository.findByBookerIdAndStatus(userId, REJECTED, pageRequest);
                 break;
-            default:
-                throw new ValidationException("Unknown state: " + state);
         }
         return bookings.stream()
                 .map(bookingMapper::mapToBookingResponseDto)
@@ -128,16 +122,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getBookingsOfOwner(Long userId, String stringState, int from, int size) {
+    public List<BookingResponseDto> getBookingsOfOwner(Long userId, State state, int from, int size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        if (from < 0) {
-            throw new ValidationException("Page cant be less then null");
-        }
         PageRequest pageRequest = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
-        Page<Booking> bookings;
+        Page<Booking> bookings = null;
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        State state = getState(stringState);
         switch (state) {
             case ALL:
                 bookings = bookingRepository.findByItem_Owner_Id(userId, pageRequest);
@@ -159,25 +149,9 @@ public class BookingServiceImpl implements BookingService {
             case REJECTED:
                 bookings = bookingRepository.findByItem_Owner_IdAndStatus(userId, REJECTED, pageRequest);
                 break;
-            default:
-                throw new ValidationException("Unknown state: " + state);
         }
         return bookings.stream()
                 .map(bookingMapper::mapToBookingResponseDto)
                 .collect(Collectors.toList());
-    }
-
-    private static State getState(String stringState) {
-        State state;
-        if (stringState == null) {
-            state = State.ALL;
-        } else {
-            try {
-                state = State.valueOf(stringState);
-            } catch (Exception e) {
-                throw new ValidationException(String.format("Unknown state: %s", stringState));
-            }
-        }
-        return state;
     }
 }

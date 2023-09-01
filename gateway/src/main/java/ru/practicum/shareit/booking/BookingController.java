@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.dto.BookItemRequestDto;
-import ru.practicum.shareit.dto.BookingState;
+import ru.practicum.shareit.booking.dto.BookItemRequestDto;
+import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.handler.GatewayException;
 
 import javax.validation.Valid;
@@ -29,8 +29,10 @@ public class BookingController {
     @GetMapping
     public ResponseEntity<Object> getBookings(@RequestHeader(USER_HEADER) long userId,
                                               @RequestParam(name = "state", defaultValue = "all") String stateParam,
-                                              @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
-                                              @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
+                                              @RequestParam(name = "from", defaultValue = "0")
+                                              @PositiveOrZero Integer from,
+                                              @RequestParam(name = "size", defaultValue = "10")
+                                              @Positive Integer size) {
         BookingState state = BookingState.from(stateParam)
                 .orElseThrow(() -> new GatewayException(HttpStatus.BAD_REQUEST.value(), "Unknown state: " + stateParam));
         log.info("Get booking with state {}, userId={}, from={}, size={}", stateParam, userId, from, size);
@@ -40,8 +42,10 @@ public class BookingController {
     @GetMapping("/owner")
     public ResponseEntity<Object> getBookingsOfOwner(@RequestHeader(USER_HEADER) long ownerId,
                                                      @RequestParam(name = "state", defaultValue = "all") String stateParam,
-                                                     @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
-                                                     @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
+                                                     @RequestParam(name = "from", defaultValue = "0")
+                                                     @PositiveOrZero Integer from,
+                                                     @RequestParam(name = "size", defaultValue = "10")
+                                                     @Positive Integer size) {
         BookingState state = BookingState.from(stateParam)
                 .orElseThrow(() -> new GatewayException(HttpStatus.BAD_REQUEST.value(), "Unknown state: " + stateParam));
         log.info(

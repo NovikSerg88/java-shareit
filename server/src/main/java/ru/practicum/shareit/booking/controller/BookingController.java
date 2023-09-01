@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class BookingController {
 
     @GetMapping
     public List<BookingResponseDto> getBookingsOfUser(@RequestHeader(USER_HEADER) Long bookerId,
-                                                      @RequestParam(value = "state", required = false, defaultValue = "ALL") String state,
+                                                      @RequestParam(value = "state", required = false, defaultValue = "ALL") State state,
                                                       @RequestParam(value = "from", required = false, defaultValue = "0") Integer from,
                                                       @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         log.info("Received GET request to get all bookings of user with id={} in state={}", bookerId, state);
@@ -53,7 +54,7 @@ public class BookingController {
 
     @GetMapping("/owner")
     public List<BookingResponseDto> getBookingsOfOwner(@RequestHeader(USER_HEADER) Long ownerId,
-                                                       @RequestParam(value = "state", required = false, defaultValue = "ALL") String state,
+                                                       @RequestParam(value = "state", required = false, defaultValue = "ALL") State state,
                                                        @RequestParam(value = "from", required = false, defaultValue = "0") Integer from,
                                                        @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         log.info("Received GET request to get all bookings of owner with id={}, in state={}", ownerId, state);

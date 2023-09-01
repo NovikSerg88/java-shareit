@@ -54,16 +54,20 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getItemsForUser(@RequestHeader(value = "X-Sharer-User-Id") Long userId,
-                                                  @RequestParam(value = "from", defaultValue = "0", required = false) @PositiveOrZero int from,
-                                                  @RequestParam(value = "size", defaultValue = "10", required = false) @Positive int size) {
+                                                  @RequestParam(value = "from", defaultValue = "0", required = false)
+                                                  @PositiveOrZero int from,
+                                                  @RequestParam(value = "size", defaultValue = "10", required = false)
+                                                  @Positive int size) {
         log.info("Received request to GET items for user with id={}", userId);
         return itemClient.getItemsForUser(userId, from, size);
     }
 
     @GetMapping("/search")
     public ResponseEntity<Object> searchItems(@RequestParam("text") String query,
-                                              @RequestParam(value = "from", defaultValue = "0", required = false) @PositiveOrZero int from,
-                                              @RequestParam(value = "size", defaultValue = "10", required = false) @Positive int size) {
+                                              @RequestParam(value = "from", defaultValue = "0", required = false)
+                                              @PositiveOrZero int from,
+                                              @RequestParam(value = "size", defaultValue = "10", required = false)
+                                              @Positive int size) {
         log.info("Received GET request to search for items by query = {}", query);
         return itemClient.searchItems(query, from, size);
     }

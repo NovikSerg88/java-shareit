@@ -27,6 +27,7 @@ import ru.practicum.shareit.booking.dto.BookerResponseDto;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.dto.ItemResponseDto;
+import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.service.BookingService;
 
@@ -100,7 +101,7 @@ public class BookingControllerTest {
 
     @Test
     void getBookings() throws Exception {
-        when(bookingService.getBookingsOfUser(any(Long.class), any(String.class),
+        when(bookingService.getBookingsOfUser(any(Long.class), any(State.class),
                 any(Integer.class), nullable(Integer.class)))
                 .thenReturn(List.of(bookingResponseDto));
 
@@ -125,7 +126,7 @@ public class BookingControllerTest {
 
     @Test
     void getBookingsByOwner() throws Exception {
-        when(bookingService.getBookingsOfOwner(any(Long.class), any(String.class),
+        when(bookingService.getBookingsOfOwner(any(Long.class), any(State.class),
                 any(Integer.class), nullable(Integer.class)))
                 .thenReturn(List.of(bookingResponseDto));
 

@@ -9,6 +9,6 @@ import javax.validation.constraints.NotEmpty;
 @AllArgsConstructor
 public final class ItemRequestDto {
     @NotEmpty
-    private String description;
-    private Long requesterId;
+    private final String description;
+    private final Long requesterId;
 }

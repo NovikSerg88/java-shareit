@@ -16,6 +16,7 @@ import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.dto.ItemResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
@@ -167,7 +168,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfUserWhenStateIsAll() {
-        String stringState = "ALL";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -175,7 +175,7 @@ public class BookingServiceImplTest {
         Page<Booking> mockPage = new PageImpl<>(new ArrayList<>());
         when(bookingRepository.findByBookerId(userId, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, State.ALL, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -183,7 +183,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfUserWhenStateIsCurrent() {
-        String stringState = "CURRENT";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -193,7 +192,7 @@ public class BookingServiceImplTest {
         when(bookingRepository.findByBookerIdAndStartIsBeforeAndEndIsAfter(
                 userId, now, now, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, State.CURRENT, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -201,7 +200,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfUserWhenStateIsPast() {
-        String stringState = "PAST";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -211,7 +209,7 @@ public class BookingServiceImplTest {
         when(bookingRepository.findByBookerIdAndEndIsBefore(
                 userId, now, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, State.PAST, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -219,7 +217,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfUserWhenStateIsFuture() {
-        String stringState = "FUTURE";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -229,7 +226,7 @@ public class BookingServiceImplTest {
         when(bookingRepository.findByBookerIdAndStartIsAfter(
                 userId, now, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, State.FUTURE, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -237,7 +234,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfUserWhenStateIsWaiting() {
-        String stringState = "WAITING";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -246,7 +242,7 @@ public class BookingServiceImplTest {
         when(bookingRepository.findByBookerIdAndStatus(
                 userId, Status.WAITING, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, State.WAITING, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -254,7 +250,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfUserWhenStateIsRejected() {
-        String stringState = "REJECTED";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -263,29 +258,14 @@ public class BookingServiceImplTest {
         when(bookingRepository.findByBookerIdAndStatus(
                 userId, Status.REJECTED, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfUser(userId, State.REJECTED, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
     }
 
     @Test
-    public void getBookingsOfUserWhenStateIsUnknownThenThrow() {
-        String stringState = "UNKNOWN_STATE";
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        try {
-            bookingService.getBookingsOfUser(userId, stringState, from, size);
-            fail("Expected ValidationException was not thrown.");
-        } catch (ValidationException e) {
-            assertEquals("Unknown state: UNKNOWN_STATE", e.getMessage());
-        }
-    }
-
-    @Test
     public void getBookingsOfOwnerWhenStateIsAll() {
-        String stringState = "ALL";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -293,7 +273,7 @@ public class BookingServiceImplTest {
         Page<Booking> mockPage = new PageImpl<>(new ArrayList<>());
         when(bookingRepository.findByItem_Owner_Id(userId, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, State.ALL, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -301,7 +281,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfOwnerWhenStateIsCurrent() {
-        String stringState = "CURRENT";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -310,7 +289,7 @@ public class BookingServiceImplTest {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         when(bookingRepository.findByItem_Owner_IdAndStartIsBeforeAndEndIsAfter(userId, now, now, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, State.CURRENT, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -318,7 +297,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfOwnerWhenStateIsPast() {
-        String stringState = "PAST";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -327,7 +305,7 @@ public class BookingServiceImplTest {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         when(bookingRepository.findByItem_Owner_IdAndEndIsBefore(userId, now, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, State.PAST, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -335,7 +313,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfOwnerWhenStateIsFuture() {
-        String stringState = "FUTURE";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -344,7 +321,7 @@ public class BookingServiceImplTest {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         when(bookingRepository.findByItem_Owner_IdAndStartIsAfter(userId, now, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, State.FUTURE, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -352,7 +329,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfOwnerWhenStateIsWaiting() {
-        String stringState = "WAITING";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -361,7 +337,7 @@ public class BookingServiceImplTest {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         when(bookingRepository.findByItem_Owner_IdAndStatus(userId, Status.WAITING, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, State.WAITING, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -369,7 +345,6 @@ public class BookingServiceImplTest {
 
     @Test
     public void getBookingsOfOwnerWhenStateIsRejected() {
-        String stringState = "REJECTED";
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -378,23 +353,9 @@ public class BookingServiceImplTest {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         when(bookingRepository.findByItem_Owner_IdAndStatus(userId, Status.REJECTED, pageRequest)).thenReturn(mockPage);
 
-        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, stringState, from, size);
+        List<BookingResponseDto> result = bookingService.getBookingsOfOwner(userId, State.REJECTED, from, size);
 
         assertNotNull(result);
         assertEquals(0, result.size());
-    }
-
-    @Test
-    public void getBookingsOfOwnerWhenStateIsUnknownThenThrow() {
-        String stringState = "UNKNOWN_STATE";
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        try {
-            bookingService.getBookingsOfOwner(userId, stringState, from, size);
-            fail("Expected ValidationException was not thrown.");
-        } catch (ValidationException e) {
-            assertEquals("Unknown state: UNKNOWN_STATE", e.getMessage());
-        }
     }
 }
